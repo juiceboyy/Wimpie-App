@@ -80,16 +80,30 @@
         </div>
 
         <div id="view-export" class="hidden space-y-4">
-            <div class="ios-card p-6">
-                <h2 class="text-lg font-bold mb-2">Maandrapportage</h2>
-                <p class="text-sm text-slate-600 mb-4">
-                    Data staat veilig in Google Sheets.
-                </p>
-                <div class="mt-4 space-y-2">
-                    <a href="https://docs.google.com/spreadsheets" target="_blank" class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-slate-100">
-                        <span>Open Google Sheets</span>
-                        <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
-                    </a>
+            <div class="ios-card p-6 space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Urenverantwoording Downloaden</h2>
+                    <p class="text-sm text-slate-500 mb-4">Genereer direct de Excel (CSV) bestanden in het juiste format voor Cordaan en Amsta.</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Selecteer Maand</label>
+                    <input type="month" id="exportMonth" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <button onclick="downloadExport('cordaan')" class="w-full flex items-center justify-between p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 hover:bg-orange-100 transition-colors">
+                        <span class="font-bold">Cordaan Export (.csv)</span>
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="downloadExport('amsta')" class="w-full flex items-center justify-between p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 hover:bg-purple-100 transition-colors">
+                        <span class="font-bold">Amsta Export (.csv)</span>
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                
+                <div id="exportStatus" class="text-center text-sm font-medium text-slate-600 hidden">
+                    Gegevens ophalen...
                 </div>
             </div>
         </div>
@@ -349,6 +363,76 @@
                 alert("Fout bij opslaan: " + e);
             }
             setTimeout(() => btn.innerText = "Verslag Versturen", 2000);
+        }
+        
+        // --- NIEUWE FUNCTIE: EXPORT MAKEN ---
+        window.downloadExport = async (organisatie) => {
+            const maandInput = document.getElementById('exportMonth').value; // Formaat: YYYY-MM
+            if (!maandInput) return alert("Selecteer eerst een maand.");
+
+            const status = document.getElementById('exportStatus');
+            status.classList.remove('hidden');
+
+            try {
+                // Data ophalen uit backend
+                const response = await fetch(`${SCRIPT_URL}?type=export&maand=${maandInput}`);
+                const data = await response.json();
+
+                // Filter data op de gekozen organisatie (hoofdletterongevoelig)
+                const orgData = data.filter(d => String(d.organisatie).toLowerCase() === organisatie.toLowerCase());
+
+                if (orgData.length === 0) {
+                    status.classList.add('hidden');
+                    return alert(`Geen uren gevonden voor ${organisatie} in deze maand.`);
+                }
+
+                let csvContent = "";
+
+                if (organisatie === 'cordaan') {
+                    // Cordaan Format: BSN;Activiteit;Datum;Minuten
+                    csvContent += "BSN;Activiteit;Datum;Minuten\r\n";
+                    orgData.forEach(row => {
+                        // NL datum maken
+                        const d = row.datum.split('-');
+                        const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
+                        // 1 dagdeel = 240 minuten, 2 dagdelen = 480 minuten
+                        const minuten = parseInt(row.dagdelen) * 240; 
+                        
+                        csvContent += `${row.bsn};${row.activiteit};${nlDatum};${minuten}\r\n`;
+                    });
+                } 
+                else if (organisatie === 'amsta') {
+                    // Amsta Format: Volledige naam;Product;Datum;Tijd van;Tijd tot
+                    csvContent += "Volledige naam;Product;Datum;Tijd van;Tijd tot\r\n";
+                    orgData.forEach(row => {
+                        const d = row.datum.split('-');
+                        const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
+                        
+                        // Fictieve tijden o.b.v. dagdelen
+                        const tijdVan = "09:00";
+                        const tijdTot = parseInt(row.dagdelen) === 2 ? "17:00" : "13:00";
+                        
+                        csvContent += `${row.naam};${row.activiteit};${nlDatum};${tijdVan};${tijdTot}\r\n`;
+                    });
+                }
+
+                // CSV Bestand genereren en download triggeren
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Urenverantwoording_${organisatie}_${maandInput}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (e) {
+                console.error(e);
+                alert("Fout bij ophalen van export data.");
+            } finally {
+                status.classList.add('hidden');
+            }
         }
     </script>
 </body>
