@@ -1,0 +1,7 @@
+# macOS systeembestanden
+.DS_Store
+
+# Dependencies en build mappen (nooit uploaden!)
+node_modules/
+dist/
+.env
