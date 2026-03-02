@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +9,32 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #F5F5F7; }
-        .ios-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .ios-btn { transition: all 0.2s; }
-        .ios-btn:active { transform: scale(0.96); }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F7;
+        }
+
+        .ios-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .ios-btn {
+            transition: all 0.2s;
+        }
+
+        .ios-btn:active {
+            transform: scale(0.96);
+        }
     </style>
 </head>
+
 <body class="text-slate-800 pb-20">
 
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+    <header
+        class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
         <div>
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">Wimpie Admin</h1>
             <p class="text-xs text-slate-500">Dagbesteding & Muziek</p>
@@ -27,22 +45,27 @@
     <main class="max-w-2xl mx-auto p-4 space-y-6">
 
         <div class="flex p-1 bg-slate-200 rounded-xl mb-6">
-            <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow-sm transition-all">Aanwezigheid</button>
-            <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Verslag</button>
-            <button onclick="switchTab('export')" id="tab-export" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Export</button>
+            <button onclick="switchTab('presence')" id="tab-presence"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow-sm transition-all">Aanwezigheid</button>
+            <button onclick="switchTab('reports')" id="tab-reports"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Verslag</button>
+            <button onclick="switchTab('export')" id="tab-export"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Export</button>
         </div>
 
         <div id="view-presence" class="space-y-4">
             <div class="ios-card p-4">
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum</label>
-                <input type="date" id="presenceDate" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="presenceDate"
+                    class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div id="participantsList" class="space-y-3">
                 <div class="text-center py-8 text-slate-400">Wachten op toegang...</div>
             </div>
 
-            <button onclick="saveAttendance()" id="btn-save-attendance" class="ios-btn w-full bg-blue-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-200">
+            <button onclick="saveAttendance()" id="btn-save-attendance"
+                class="ios-btn w-full bg-blue-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-200">
                 Opslaan
             </button>
         </div>
@@ -51,30 +74,35 @@
             <div class="ios-card p-4 space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum</label>
-                    <input type="date" id="reportDate" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
+                    <input type="date" id="reportDate"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Deelnemer</label>
-                    <select id="reportParticipant" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
+                    <select id="reportParticipant"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
                         <option>Selecteer...</option>
                     </select>
                 </div>
-                
+
                 <div id="historyContainer" class="hidden">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Eerdere Verslagen</label>
                     <div id="historyList" class="flex flex-wrap gap-2">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="relative">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Verslag</label>
-                    <textarea id="reportText" rows="8" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500" placeholder="Selecteer eerst een deelnemer..."></textarea>
+                    <textarea id="reportText" rows="8"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Selecteer eerst een deelnemer..."></textarea>
                     <div id="reportLoading" class="hidden absolute top-8 right-2">
                         <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-slate-400"></i>
                     </div>
                 </div>
             </div>
-            <button onclick="saveReport()" id="btn-save-report" class="ios-btn w-full bg-green-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-green-200">
+            <button onclick="saveReport()" id="btn-save-report"
+                class="ios-btn w-full bg-green-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-green-200">
                 Verslag Versturen
             </button>
         </div>
@@ -83,25 +111,29 @@
             <div class="ios-card p-6 space-y-6">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">Urenverantwoording Downloaden</h2>
-                    <p class="text-sm text-slate-500 mb-4">Genereer direct de Excel (CSV) bestanden in het juiste format voor Cordaan en Amsta.</p>
+                    <p class="text-sm text-slate-500 mb-4">Genereer direct de Excel (CSV) bestanden in het juiste format
+                        voor Cordaan en Amsta.</p>
                 </div>
-                
+
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Selecteer Maand</label>
-                    <input type="month" id="exportMonth" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="month" id="exportMonth"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <div class="space-y-3 pt-2">
-                    <button onclick="downloadExport('cordaan')" class="w-full flex items-center justify-between p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 hover:bg-orange-100 transition-colors">
+                    <button onclick="downloadExport('cordaan')"
+                        class="w-full flex items-center justify-between p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 hover:bg-orange-100 transition-colors">
                         <span class="font-bold">Cordaan Export (.csv)</span>
                         <i data-lucide="download" class="w-5 h-5"></i>
                     </button>
-                    <button onclick="downloadExport('amsta')" class="w-full flex items-center justify-between p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 hover:bg-purple-100 transition-colors">
+                    <button onclick="downloadExport('amsta')"
+                        class="w-full flex items-center justify-between p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 hover:bg-purple-100 transition-colors">
                         <span class="font-bold">Amsta Export (.csv)</span>
                         <i data-lucide="download" class="w-5 h-5"></i>
                     </button>
                 </div>
-                
+
                 <div id="exportStatus" class="text-center text-sm font-medium text-slate-600 hidden">
                     Gegevens ophalen...
                 </div>
@@ -112,18 +144,18 @@
 
     <script>
         // --- JOUW INSTELLINGEN ---
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE-JwV0Ilm6WjoRUPmiGF6sae3aygqtTn0OuL45ABZbb5KDpMCqiXiMmIB_puUJ7IN/exec'; 
-        const TOEGANGSCODE = '1055'; 
+        const SCRIPT_URL = '/.netlify/functions/api';
+        const TOEGANGSCODE = '1055';
         // -------------------------
 
         let participantsData = [];
-        let presenceState = {}; 
+        let presenceState = {};
 
         // INIT
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             setTimeout(checkToegang, 500);
-            
+
             document.getElementById('presenceDate').addEventListener('change', loadAttendanceForDate);
             document.getElementById('reportDate').addEventListener('change', loadExistingReport);
             // Als je een andere deelnemer kiest, laad historie + eventueel verslag van gekozen datum
@@ -138,13 +170,13 @@
             if (invoer === TOEGANGSCODE) {
                 document.getElementById('presenceDate').valueAsDate = new Date();
                 document.getElementById('reportDate').valueAsDate = new Date();
-                fetchParticipants(); 
+                fetchParticipants();
             } else {
                 document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
             }
         }
 
-        window.switchTab = function(tab) {
+        window.switchTab = function (tab) {
             ['presence', 'reports', 'export'].forEach(t => {
                 document.getElementById(`view-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
@@ -162,7 +194,7 @@
                 renderParticipants();
                 fillSelect();
                 document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
-                loadAttendanceForDate(); 
+                loadAttendanceForDate();
             } catch (e) {
                 console.error(e);
                 alert("Check je URL.");
@@ -174,7 +206,7 @@
             if (!datum) return;
             presenceState = {};
             document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
-            renderParticipants(); 
+            renderParticipants();
             const btn = document.getElementById('btn-save-attendance');
             btn.innerText = "Gegevens ophalen...";
             btn.disabled = true;
@@ -186,11 +218,11 @@
                     if (index > -1) {
                         presenceState[index] = true;
                         const select = document.getElementById(`dagdelen-${index}`);
-                        if(select) select.value = entry.dagdelen;
+                        if (select) select.value = entry.dagdelen;
                     }
                 });
                 renderParticipants();
-            } catch(e) { console.error(e); } 
+            } catch (e) { console.error(e); }
             finally { btn.innerText = "Opslaan"; btn.disabled = false; }
         }
 
@@ -220,7 +252,7 @@
                         // Maak NL datum van YYYY-MM-DD
                         const delen = d.split('-');
                         const nlDatum = `${delen[2]}-${delen[1]}`;
-                        
+
                         const badge = document.createElement('button');
                         badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
                         badge.innerText = nlDatum;
@@ -246,7 +278,7 @@
 
             if (!datum || naam === 'Selecteer...') return;
 
-            textarea.value = ""; 
+            textarea.value = "";
             textarea.placeholder = "Zoeken naar bestaand verslag...";
             textarea.disabled = true;
             loader.classList.remove('hidden');
@@ -274,7 +306,7 @@
                 const isActive = presenceState[index];
                 const activeClass = isActive ? 'ring-2 ring-blue-500' : '';
                 const btnColor = isActive ? 'bg-blue-500' : 'bg-slate-200';
-                
+
                 const html = `
                 <div class="ios-card p-4 flex items-center justify-between transition-all cursor-pointer ${activeClass}" id="card-${index}" onclick="togglePresence(${index})">
                     <div>
@@ -311,7 +343,7 @@
         window.togglePresence = (index) => {
             const btn = document.getElementById(`btn-${index}`);
             const card = document.getElementById(`card-${index}`);
-            
+
             if (presenceState[index]) {
                 presenceState[index] = false;
                 btn.classList.remove('bg-blue-500');
@@ -330,12 +362,12 @@
             const entries = [];
             participantsData.forEach((p, index) => {
                 if (presenceState[index]) {
-                    entries.push({datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja"});
+                    entries.push({ datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja" });
                 }
             });
             const btn = document.getElementById('btn-save-attendance');
             btn.innerText = "Bezig met bijwerken...";
-            if (entries.length === 0) entries.push({datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee"});
+            if (entries.length === 0) entries.push({ datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee" });
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'registratie', entries: entries }) });
             btn.innerText = "Succesvol Bijgewerkt!";
             setTimeout(() => { btn.innerText = "Opslaan"; }, 2000);
@@ -357,14 +389,14 @@
                     body: JSON.stringify({ type: 'verslag', datum, naam, tekst })
                 });
                 const result = await response.json();
-                alert(result.message); 
+                alert(result.message);
                 btn.innerText = "Verslag Opgeslagen!";
             } catch (e) {
                 alert("Fout bij opslaan: " + e);
             }
             setTimeout(() => btn.innerText = "Verslag Versturen", 2000);
         }
-        
+
         // --- NIEUWE FUNCTIE: EXPORT MAKEN ---
         window.downloadExport = async (organisatie) => {
             const maandInput = document.getElementById('exportMonth').value; // Formaat: YYYY-MM
@@ -396,22 +428,22 @@
                         const d = row.datum.split('-');
                         const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
                         // 1 dagdeel = 240 minuten, 2 dagdelen = 480 minuten
-                        const minuten = parseInt(row.dagdelen) * 240; 
-                        
+                        const minuten = parseInt(row.dagdelen) * 240;
+
                         csvContent += `${row.bsn};${row.activiteit};${nlDatum};${minuten}\r\n`;
                     });
-                } 
+                }
                 else if (organisatie === 'amsta') {
                     // Amsta Format: Volledige naam;Product;Datum;Tijd van;Tijd tot
                     csvContent += "Volledige naam;Product;Datum;Tijd van;Tijd tot\r\n";
                     orgData.forEach(row => {
                         const d = row.datum.split('-');
                         const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
-                        
+
                         // Fictieve tijden o.b.v. dagdelen
                         const tijdVan = "09:00";
                         const tijdTot = parseInt(row.dagdelen) === 2 ? "17:00" : "13:00";
-                        
+
                         csvContent += `${row.naam};${row.activiteit};${nlDatum};${tijdVan};${tijdTot}\r\n`;
                     });
                 }
@@ -436,4 +468,5 @@
         }
     </script>
 </body>
+
 </html>

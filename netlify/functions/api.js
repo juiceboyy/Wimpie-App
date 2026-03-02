@@ -36,6 +36,64 @@ exports.handler = async function(event, context) {
 
     // --- GET REQUEST ---
     if (event.httpMethod === 'GET') {
+      const { type, maand } = event.queryStringParameters || {};
+
+      // EXPORT LOGICA
+      if (type === 'export') {
+        if (!maand) throw new Error('Geen maand opgegeven voor export.');
+
+        // Data ophalen uit beide sheets
+        const [registratiesRes, deelnemersRes] = await Promise.all([
+          sheets.spreadsheets.values.get({ spreadsheetId, range: 'Registraties!A:D' }),
+          sheets.spreadsheets.values.get({ spreadsheetId, range: 'Deelnemers!A:F' }),
+        ]);
+
+        const registraties = registratiesRes.data.values || [];
+        const deelnemers = deelnemersRes.data.values || [];
+
+        // Mapping maken van deelnemers (Naam -> Info)
+        // Aanname kolommen Deelnemers: A=Naam, B=Organisatie, C=BSN, D=Activiteit
+        const deelnemerMap = {};
+        deelnemers.slice(1).forEach(row => {
+          if (row[0]) {
+            deelnemerMap[row[0]] = {
+              organisatie: row[1] || '',
+              bsn: row[2] || '',
+              activiteit: row[3] || '',
+            };
+          }
+        });
+
+        // Registraties filteren en verrijken
+        // Prompt vereiste: Datum=Kolom A (index 0), Aanwezig=Kolom D (index 3)
+        // Impliciet: Naam=Kolom B (index 1), Dagdelen=Kolom C (index 2)
+        const exportData = registraties.slice(1)
+          .filter(row => {
+            const datum = row[0];
+            const aanwezig = row[3];
+            return aanwezig === 'Ja' && datum && datum.startsWith(maand);
+          })
+          .map(row => {
+            const naam = row[1];
+            const info = deelnemerMap[naam] || {};
+            return {
+              datum: row[0],
+              naam: naam,
+              dagdelen: row[2],
+              organisatie: info.organisatie || '',
+              bsn: info.bsn || '',
+              activiteit: info.activiteit || '',
+            };
+          });
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(exportData),
+        };
+      }
+
+      // STANDAARD GET (Deelnemers ophalen)
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
         range: 'Deelnemers!A:F',
