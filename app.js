@@ -6,12 +6,20 @@ let participantsData = [];
 let presenceState = {};
 
 // INIT
-document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
-    setTimeout(checkToegang, 500);
-    setupEventListeners();
+function init() {
     exposeGlobals();
-});
+    setupEventListeners();
+
+    const invoer = prompt("Wat is de toegangscode voor Wimpie?");
+    if (invoer === TOEGANGSCODE) {
+        document.getElementById('presenceDate').valueAsDate = new Date();
+        document.getElementById('reportDate').valueAsDate = new Date();
+        lucide.createIcons();
+        fetchParticipants();
+    } else {
+        document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
+    }
+}
 
 function setupEventListeners() {
     document.getElementById('presenceDate').addEventListener('change', loadAttendanceForDate);
@@ -31,16 +39,6 @@ function exposeGlobals() {
     window.togglePresence = togglePresence;
 }
 
-function checkToegang() {
-    const invoer = prompt("Wat is de toegangscode voor Wimpie?");
-    if (invoer === TOEGANGSCODE) {
-        document.getElementById('presenceDate').valueAsDate = new Date();
-        document.getElementById('reportDate').valueAsDate = new Date();
-        fetchParticipants();
-    } else {
-        document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
-    }
-}
 function switchTab(tab) {
     ['presence', 'reports', 'export'].forEach(t => {
         document.getElementById(`view-${t}`).classList.add('hidden');
@@ -275,3 +273,6 @@ function fillSelect() {
         select.appendChild(opt);
     });
 }
+
+// Start de applicatie
+init();
