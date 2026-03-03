@@ -203,8 +203,8 @@ async function saveReport(payload) {
 }
 
 async function sendExport(payload) {
-  // TODO: TESTMODUS - Verander dit terug naar declaratieonderaannemers@cordaan.nl voordat we live gaan!
-  const toEmail = 'halfhide@gmail.com';
+  const toEmail = 'declaratieonderaannemers@cordaan.nl';
+  const ccEmail = 'auckboersma@gmail.com';
   
   const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
   const [jaar, maandNummer] = payload.maand.split('-');
@@ -223,6 +223,6 @@ Met vriendelijke groet,
 Ronald van Holst / Auck Boersma
 Wimpie & de Domino's`;
 
-  await verstuurExportEmail(toEmail, subject, textBody, payload.filename, payload.base64Data);
+  await verstuurExportEmail(toEmail, ccEmail, subject, textBody, payload.filename, payload.base64Data);
   return jsonResponse({ message: 'Export succesvol verzonden.' });
 }

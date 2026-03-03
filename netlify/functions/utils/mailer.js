@@ -20,11 +20,12 @@ async function verstuurVerslagEmail(naam, datum, tekst, email) {
   }
 }
 
-async function verstuurExportEmail(toEmail, subject, textBody, filename, base64Data) {
+async function verstuurExportEmail(toEmail, ccEmail, subject, textBody, filename, base64Data) {
   try {
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: toEmail,
+      cc: ccEmail,
       subject: subject,
       text: textBody,
       attachments: [
