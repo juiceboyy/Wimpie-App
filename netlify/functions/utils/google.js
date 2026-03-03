@@ -51,4 +51,4 @@ async function clearSheetData(range) {
   });
 }
 
-module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData, uploadToDrive };
+module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData };
