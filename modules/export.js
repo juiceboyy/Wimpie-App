@@ -1,4 +1,5 @@
 import { sendExportEmail } from './api.js';
+import { renderExportPreview } from './ui.js';
 
 export function generateAndDownloadCsv(data, organization, month) {
     if (organization.toLowerCase() === 'cordaan') {
@@ -131,64 +132,66 @@ export function generateCordaanExcel(data, yearMonth) {
     const shortYear = yearStr.slice(2);
     const filename = `${shortYear}${monthStr}${lastDay} - Controlebestand Wimpie&Domino's - ${monthNames[monthIndex]} '${shortYear}.xlsx`;
 
-    // 5. Excel Generatie
-    const ws = XLSX.utils.json_to_sheet(excelRows);
+    // 5. Preview tonen in plaats van direct downloaden
+    renderExportPreview(excelRows, filename, yearMonth, async () => {
+        // 6. Excel Generatie (Pas bij bevestiging)
+        const ws = XLSX.utils.json_to_sheet(excelRows);
 
-    // Kolombreedtes automatisch aanpassen
-    if (excelRows.length > 0) {
-        const headers = Object.keys(excelRows[0]);
-        const wscols = headers.map(h => ({ wch: h.length }));
+        // Kolombreedtes automatisch aanpassen
+        if (excelRows.length > 0) {
+            const headers = Object.keys(excelRows[0]);
+            const wscols = headers.map(h => ({ wch: h.length }));
 
-        excelRows.forEach(row => {
-            headers.forEach((h, i) => {
-                const val = row[h];
-                if (val !== undefined && val !== null) {
-                    const len = String(val).length;
-                    if (len > wscols[i].wch) wscols[i].wch = len;
-                }
+            excelRows.forEach(row => {
+                headers.forEach((h, i) => {
+                    const val = row[h];
+                    if (val !== undefined && val !== null) {
+                        const len = String(val).length;
+                        if (len > wscols[i].wch) wscols[i].wch = len;
+                    }
+                });
             });
-        });
 
-        // Extra padding toevoegen
-        wscols.forEach(c => c.wch += 2);
-        ws['!cols'] = wscols;
-    }
+            // Extra padding toevoegen
+            wscols.forEach(c => c.wch += 2);
+            ws['!cols'] = wscols;
+        }
 
-    // Styling & Formattering
-    if (ws['!ref']) {
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-            const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
-            const cell = ws[firstCellRef];
-            const isHeader = (R === 0);
-            const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
+        // Styling & Formattering
+        if (ws['!ref']) {
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
+                const cell = ws[firstCellRef];
+                const isHeader = (R === 0);
+                const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
 
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[cellRef]) continue;
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cellRef]) continue;
 
-                // 1. Styling (Headers & Subtotalen)
-                if (isHeader || isSubtotal) {
-                    if (!ws[cellRef].s) ws[cellRef].s = {};
-                    ws[cellRef].s.font = { bold: true };
-                    ws[cellRef].s.fill = { fgColor: { rgb: isHeader ? "D9D9D9" : "F2F2F2" } };
-                }
+                    // 1. Styling (Headers & Subtotalen)
+                    if (isHeader || isSubtotal) {
+                        if (!ws[cellRef].s) ws[cellRef].s = {};
+                        ws[cellRef].s.font = { bold: true };
+                        ws[cellRef].s.fill = { fgColor: { rgb: isHeader ? "D9D9D9" : "F2F2F2" } };
+                    }
 
-                // 2. Valuta Formattering (Kolom 8=Tarief, 9=Bedrag) - Niet op header
-                if (!isHeader && (C === 8 || C === 9)) {
-                    ws[cellRef].z = '"€ "#,##0.00';
+                    // 2. Valuta Formattering (Kolom 8=Tarief, 9=Bedrag) - Niet op header
+                    if (!isHeader && (C === 8 || C === 9)) {
+                        ws[cellRef].z = '"€ "#,##0.00';
+                    }
                 }
             }
         }
-    }
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Blad1");
-    XLSX.writeFile(wb, filename);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Blad1");
+        
+        // Geen lokale download meer (XLSX.writeFile verwijderd)
 
-    // Email versturen naar backend
-    const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-    sendExportEmail({ filename, base64Data, maand: yearMonth })
-        .then(() => alert("Bestand succesvol gedownload en gemaild naar Cordaan!"))
-        .catch(e => alert("Bestand gedownload, maar mailen mislukt: " + e.message));
+        // Email versturen naar backend
+        const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+        await sendExportEmail({ filename, base64Data, maand: yearMonth });
+    });
 }

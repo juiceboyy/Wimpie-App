@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const { Readable } = require('stream');
 
 let formattedPrivateKey = process.env.GOOGLE_PRIVATE_KEY || '';
 if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
@@ -11,7 +12,7 @@ const auth = new google.auth.GoogleAuth({
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
     private_key: formattedPrivateKey,
   },
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file'],
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
@@ -50,4 +51,23 @@ async function clearSheetData(range) {
   });
 }
 
-module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData };
+async function uploadToDrive(filename, base64Data) {
+  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+  const authClient = await auth.getClient();
+  const drive = google.drive({ version: 'v3', auth: authClient });
+
+  const buffer = Buffer.from(base64Data, 'base64');
+  const stream = new Readable();
+  stream.push(buffer);
+  stream.push(null);
+
+  await drive.files.create({
+    requestBody: { name: filename, parents: [folderId] },
+    media: { 
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+      body: stream 
+    },
+  });
+}
+
+module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData, uploadToDrive };
