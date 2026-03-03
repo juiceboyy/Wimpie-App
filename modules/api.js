@@ -29,10 +29,16 @@ export async function postRegistration(entries) {
 }
 
 export async function postReport(payload) {
-    return fetch(SCRIPT_URL, {
+    const response = await fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ ...payload, type: 'verslag' })
     });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Server error bij opslaan verslag');
+    }
+    return response.json();
 }
 
 export async function fetchExport(month) {

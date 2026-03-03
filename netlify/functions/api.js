@@ -212,25 +212,27 @@ exports.handler = async function(event, context) {
           await updateSheetData(`Verslagen!C${rowIndex + 1}`, [[payload.tekst]]);
         } else {
           // Nieuwe rij toevoegen
-          await appendSheetData(verslagenRange, [[payload.datum, payload.naam, payload.tekst]]);
+          await appendSheetData('Verslagen!A:C', [[payload.datum, payload.naam, payload.tekst]]);
         }
 
         // Email logica
-        let mailStatus = '';
         try {
           const deelnemersRows = await getSheetData('Deelnemers!A:G');
           const deelnemer = deelnemersRows.find(row => row[0] === payload.naam);
           
           // Check kolom G (index 6) voor email
           if (deelnemer && deelnemer[6] && deelnemer[6].includes('@')) {
-            mailStatus = await verstuurVerslagEmail(payload.naam, payload.datum, payload.tekst, deelnemer[6]);
+            await verstuurVerslagEmail(payload.naam, payload.datum, payload.tekst, deelnemer[6]);
           }
         } catch (mailError) {
           console.error('Mail error:', mailError);
-          mailStatus = 'Mail mislukt.';
         }
 
-        return { statusCode: 200, headers, body: JSON.stringify({ message: `Verslag opgeslagen. ${mailStatus}` }) };
+        return { 
+          statusCode: 200, 
+          headers, 
+          body: JSON.stringify({ message: 'Verslag succesvol opgeslagen en verzonden.' }) 
+        };
       }
     }
 
