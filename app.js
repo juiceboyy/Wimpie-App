@@ -1,24 +1,21 @@
 import * as API from './modules/api.js';
 import { generateAndDownloadCsv } from './modules/export.js';
-const TOEGANGSCODE = '1055';
+import { verifyAccess } from './modules/auth.js';
 
 let participantsData = [];
 let presenceState = {};
 
 // INIT
 function init() {
+    if (!verifyAccess()) return;
+
     exposeGlobals();
     setupEventListeners();
 
-    const invoer = prompt("Wat is de toegangscode voor Wimpie?");
-    if (invoer === TOEGANGSCODE) {
-        document.getElementById('presenceDate').valueAsDate = new Date();
-        document.getElementById('reportDate').valueAsDate = new Date();
-        lucide.createIcons();
-        fetchParticipants();
-    } else {
-        document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
-    }
+    document.getElementById('presenceDate').valueAsDate = new Date();
+    document.getElementById('reportDate').valueAsDate = new Date();
+    lucide.createIcons();
+    fetchParticipants();
 }
 
 function setupEventListeners() {
@@ -37,17 +34,6 @@ function exposeGlobals() {
     window.saveReport = saveReport;
     window.downloadExport = handleExport;
     window.togglePresence = togglePresence;
-}
-
-function switchTab(tab) {
-    ['presence', 'reports', 'export'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.add('hidden');
-        document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-        document.getElementById(`tab-${t}`).classList.add('text-slate-500');
-    });
-    document.getElementById(`view-${tab}`).classList.remove('hidden');
-    document.getElementById(`tab-${tab}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-    document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
 }
 
 async function fetchParticipants() {
@@ -231,48 +217,6 @@ async function handleExport(organisatie) {
     } finally {
         status.classList.add('hidden');
     }
-}
-
-// --- UI HELPERS ---
-function renderParticipants() {
-    const container = document.getElementById('participantsList');
-    container.innerHTML = '';
-    participantsData.forEach((p, index) => {
-        const isActive = presenceState[index];
-        const activeClass = isActive ? 'ring-2 ring-blue-500' : '';
-        const btnColor = isActive ? 'bg-blue-500' : 'bg-slate-200';
-
-        const html = `
-        <div class="ios-card p-4 flex items-center justify-between transition-all cursor-pointer ${activeClass}" id="card-${index}" onclick="togglePresence(${index})">
-            <div>
-                <div class="font-bold text-slate-800">${p.naam}</div>
-                <div class="text-xs text-slate-500">${p.organisatie}</div>
-            </div>
-            <div class="flex items-center gap-3">
-                <select id="dagdelen-${index}" onclick="event.stopPropagation()" class="bg-slate-100 rounded text-sm p-2 outline-none">
-                    <option value="2">2 Dagdelen</option>
-                    <option value="1">1 Dagdeel</option>
-                </select>
-                <div id="btn-${index}" 
-                    class="w-10 h-10 rounded-full ${btnColor} flex items-center justify-center transition-colors">
-                    <i data-lucide="check" class="w-5 h-5 text-white"></i>
-                </div>
-            </div>
-        </div>`;
-        container.innerHTML += html;
-    });
-    lucide.createIcons();
-}
-
-function fillSelect() {
-    const select = document.getElementById('reportParticipant');
-    select.innerHTML = '<option>Selecteer...</option>';
-    participantsData.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.naam;
-        opt.innerText = p.naam;
-        select.appendChild(opt);
-    });
 }
 
 // Start de applicatie
