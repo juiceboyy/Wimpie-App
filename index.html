@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html lang="nl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wimpie Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #F5F5F7; }
-        .ios-card { background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .ios-btn { transition: all 0.2s; }
-        .ios-btn:active { transform: scale(0.96); }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body class="text-slate-800 pb-20">
 
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+    <header
+        class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
         <div>
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">Wimpie Admin</h1>
             <p class="text-xs text-slate-500">Dagbesteding & Muziek</p>
@@ -27,22 +24,27 @@
     <main class="max-w-2xl mx-auto p-4 space-y-6">
 
         <div class="flex p-1 bg-slate-200 rounded-xl mb-6">
-            <button onclick="switchTab('presence')" id="tab-presence" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow-sm transition-all">Aanwezigheid</button>
-            <button onclick="switchTab('reports')" id="tab-reports" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Verslag</button>
-            <button onclick="switchTab('export')" id="tab-export" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Export</button>
+            <button onclick="switchTab('presence')" id="tab-presence"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow-sm transition-all">Aanwezigheid</button>
+            <button onclick="switchTab('reports')" id="tab-reports"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Verslag</button>
+            <button onclick="switchTab('export')" id="tab-export"
+                class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-500 transition-all">Export</button>
         </div>
 
         <div id="view-presence" class="space-y-4">
             <div class="ios-card p-4">
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum</label>
-                <input type="date" id="presenceDate" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="presenceDate"
+                    class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div id="participantsList" class="space-y-3">
                 <div class="text-center py-8 text-slate-400">Wachten op toegang...</div>
             </div>
 
-            <button onclick="saveAttendance()" id="btn-save-attendance" class="ios-btn w-full bg-blue-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-200">
+            <button onclick="saveAttendance()" id="btn-save-attendance"
+                class="ios-btn w-full bg-blue-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-200">
                 Opslaan
             </button>
         </div>
@@ -51,305 +53,75 @@
             <div class="ios-card p-4 space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum</label>
-                    <input type="date" id="reportDate" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
+                    <input type="date" id="reportDate"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Deelnemer</label>
-                    <select id="reportParticipant" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
+                    <select id="reportParticipant"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500">
                         <option>Selecteer...</option>
                     </select>
                 </div>
-                
+
                 <div id="historyContainer" class="hidden">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Eerdere Verslagen</label>
                     <div id="historyList" class="flex flex-wrap gap-2">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="relative">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Verslag</label>
-                    <textarea id="reportText" rows="8" class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500" placeholder="Selecteer eerst een deelnemer..."></textarea>
+                    <textarea id="reportText" rows="8"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Selecteer eerst een deelnemer..."></textarea>
                     <div id="reportLoading" class="hidden absolute top-8 right-2">
                         <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-slate-400"></i>
                     </div>
                 </div>
             </div>
-            <button onclick="saveReport()" id="btn-save-report" class="ios-btn w-full bg-green-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-green-200">
+            <button onclick="saveReport()" id="btn-save-report"
+                class="ios-btn w-full bg-green-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-green-200">
                 Verslag Versturen
             </button>
         </div>
 
         <div id="view-export" class="hidden space-y-4">
-            <div class="ios-card p-6">
-                <h2 class="text-lg font-bold mb-2">Maandrapportage</h2>
-                <p class="text-sm text-slate-600 mb-4">
-                    Data staat veilig in Google Sheets.
-                </p>
-                <div class="mt-4 space-y-2">
-                    <a href="https://docs.google.com/spreadsheets" target="_blank" class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border hover:bg-slate-100">
-                        <span>Open Google Sheets</span>
-                        <i data-lucide="external-link" class="w-4 h-4 text-slate-400"></i>
-                    </a>
+            <div class="ios-card p-6 space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">Urenverantwoording Downloaden</h2>
+                    <p class="text-sm text-slate-500 mb-4">Genereer direct de Excel (CSV) bestanden in het juiste format
+                        voor Cordaan en Amsta.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Selecteer Maand</label>
+                    <input type="month" id="exportMonth"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <button onclick="downloadExport('cordaan')"
+                        class="w-full flex items-center justify-between p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 hover:bg-orange-100 transition-colors">
+                        <span class="font-bold">Cordaan Export (.csv)</span>
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="downloadExport('amsta')"
+                        class="w-full flex items-center justify-between p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 hover:bg-purple-100 transition-colors">
+                        <span class="font-bold">Amsta Export (.csv)</span>
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div id="exportStatus" class="text-center text-sm font-medium text-slate-600 hidden">
+                    Gegevens ophalen...
                 </div>
             </div>
         </div>
 
     </main>
 
-    <script>
-        // --- JOUW INSTELLINGEN ---
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwE-JwV0Ilm6WjoRUPmiGF6sae3aygqtTn0OuL45ABZbb5KDpMCqiXiMmIB_puUJ7IN/exec'; 
-        const TOEGANGSCODE = '1055'; 
-        // -------------------------
-
-        let participantsData = [];
-        let presenceState = {}; 
-
-        // INIT
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            setTimeout(checkToegang, 500);
-            
-            document.getElementById('presenceDate').addEventListener('change', loadAttendanceForDate);
-            document.getElementById('reportDate').addEventListener('change', loadExistingReport);
-            // Als je een andere deelnemer kiest, laad historie + eventueel verslag van gekozen datum
-            document.getElementById('reportParticipant').addEventListener('change', () => {
-                loadReportHistory();
-                loadExistingReport();
-            });
-        });
-
-        function checkToegang() {
-            const invoer = prompt("Wat is de toegangscode voor Wimpie?");
-            if (invoer === TOEGANGSCODE) {
-                document.getElementById('presenceDate').valueAsDate = new Date();
-                document.getElementById('reportDate').valueAsDate = new Date();
-                fetchParticipants(); 
-            } else {
-                document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
-            }
-        }
-
-        window.switchTab = function(tab) {
-            ['presence', 'reports', 'export'].forEach(t => {
-                document.getElementById(`view-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-                document.getElementById(`tab-${t}`).classList.add('text-slate-500');
-            });
-            document.getElementById(`view-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-${tab}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-            document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
-        }
-
-        async function fetchParticipants() {
-            try {
-                const response = await fetch(SCRIPT_URL);
-                participantsData = await response.json();
-                renderParticipants();
-                fillSelect();
-                document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
-                loadAttendanceForDate(); 
-            } catch (e) {
-                console.error(e);
-                alert("Check je URL.");
-            }
-        }
-
-        async function loadAttendanceForDate() {
-            const datum = document.getElementById('presenceDate').value;
-            if (!datum) return;
-            presenceState = {};
-            document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
-            renderParticipants(); 
-            const btn = document.getElementById('btn-save-attendance');
-            btn.innerText = "Gegevens ophalen...";
-            btn.disabled = true;
-            try {
-                const response = await fetch(`${SCRIPT_URL}?datum=${datum}`);
-                const historyData = await response.json();
-                historyData.forEach(entry => {
-                    const index = participantsData.findIndex(p => p.naam === entry.naam);
-                    if (index > -1) {
-                        presenceState[index] = true;
-                        const select = document.getElementById(`dagdelen-${index}`);
-                        if(select) select.value = entry.dagdelen;
-                    }
-                });
-                renderParticipants();
-            } catch(e) { console.error(e); } 
-            finally { btn.innerText = "Opslaan"; btn.disabled = false; }
-        }
-
-        // --- NIEUWE FUNCTIE: HISTORIE OPHALEN ---
-        async function loadReportHistory() {
-            const naam = document.getElementById('reportParticipant').value;
-            const container = document.getElementById('historyContainer');
-            const list = document.getElementById('historyList');
-
-            if (naam === 'Selecteer...') {
-                container.classList.add('hidden');
-                return;
-            }
-
-            list.innerHTML = '<span class="text-xs text-slate-400">Zoeken...</span>';
-            container.classList.remove('hidden');
-
-            try {
-                const response = await fetch(`${SCRIPT_URL}?type=verslag_historie&naam=${encodeURIComponent(naam)}`);
-                const datums = await response.json();
-
-                list.innerHTML = '';
-                if (datums.length === 0) {
-                    list.innerHTML = '<span class="text-xs text-slate-400">Nog geen verslagen.</span>';
-                } else {
-                    datums.forEach(d => {
-                        // Maak NL datum van YYYY-MM-DD
-                        const delen = d.split('-');
-                        const nlDatum = `${delen[2]}-${delen[1]}`;
-                        
-                        const badge = document.createElement('button');
-                        badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
-                        badge.innerText = nlDatum;
-                        badge.onclick = () => {
-                            // Zet datum picker en laad verslag
-                            document.getElementById('reportDate').value = d;
-                            loadExistingReport();
-                        };
-                        list.appendChild(badge);
-                    });
-                }
-            } catch (e) {
-                console.error(e);
-                list.innerHTML = '<span class="text-xs text-red-400">Fout bij laden.</span>';
-            }
-        }
-
-        async function loadExistingReport() {
-            const datum = document.getElementById('reportDate').value;
-            const naam = document.getElementById('reportParticipant').value;
-            const textarea = document.getElementById('reportText');
-            const loader = document.getElementById('reportLoading');
-
-            if (!datum || naam === 'Selecteer...') return;
-
-            textarea.value = ""; 
-            textarea.placeholder = "Zoeken naar bestaand verslag...";
-            textarea.disabled = true;
-            loader.classList.remove('hidden');
-
-            try {
-                const url = `${SCRIPT_URL}?type=verslag&datum=${datum}&naam=${encodeURIComponent(naam)}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                textarea.value = data.tekst || "";
-                textarea.placeholder = "Typ hier je verslag...";
-            } catch (e) {
-                console.error(e);
-                textarea.placeholder = "Fout bij ophalen.";
-            } finally {
-                textarea.disabled = false;
-                loader.classList.add('hidden');
-                textarea.focus();
-            }
-        }
-
-        function renderParticipants() {
-            const container = document.getElementById('participantsList');
-            container.innerHTML = '';
-            participantsData.forEach((p, index) => {
-                const isActive = presenceState[index];
-                const activeClass = isActive ? 'ring-2 ring-blue-500' : '';
-                const btnColor = isActive ? 'bg-blue-500' : 'bg-slate-200';
-                
-                const html = `
-                <div class="ios-card p-4 flex items-center justify-between transition-all cursor-pointer ${activeClass}" id="card-${index}" onclick="togglePresence(${index})">
-                    <div>
-                        <div class="font-bold text-slate-800">${p.naam}</div>
-                        <div class="text-xs text-slate-500">${p.organisatie}</div>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <select id="dagdelen-${index}" onclick="event.stopPropagation()" class="bg-slate-100 rounded text-sm p-2 outline-none">
-                            <option value="2">2 Dagdelen</option>
-                            <option value="1">1 Dagdeel</option>
-                        </select>
-                        <div id="btn-${index}" 
-                            class="w-10 h-10 rounded-full ${btnColor} flex items-center justify-center transition-colors">
-                            <i data-lucide="check" class="w-5 h-5 text-white"></i>
-                        </div>
-                    </div>
-                </div>`;
-                container.innerHTML += html;
-            });
-            lucide.createIcons();
-        }
-
-        function fillSelect() {
-            const select = document.getElementById('reportParticipant');
-            select.innerHTML = '<option>Selecteer...</option>';
-            participantsData.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.naam;
-                opt.innerText = p.naam;
-                select.appendChild(opt);
-            });
-        }
-
-        window.togglePresence = (index) => {
-            const btn = document.getElementById(`btn-${index}`);
-            const card = document.getElementById(`card-${index}`);
-            
-            if (presenceState[index]) {
-                presenceState[index] = false;
-                btn.classList.remove('bg-blue-500');
-                btn.classList.add('bg-slate-200');
-                card.classList.remove('ring-2', 'ring-blue-500');
-            } else {
-                presenceState[index] = true;
-                btn.classList.remove('bg-slate-200');
-                btn.classList.add('bg-blue-500');
-                card.classList.add('ring-2', 'ring-blue-500');
-            }
-        }
-
-        window.saveAttendance = async () => {
-            const datum = document.getElementById('presenceDate').value;
-            const entries = [];
-            participantsData.forEach((p, index) => {
-                if (presenceState[index]) {
-                    entries.push({datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja"});
-                }
-            });
-            const btn = document.getElementById('btn-save-attendance');
-            btn.innerText = "Bezig met bijwerken...";
-            if (entries.length === 0) entries.push({datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee"});
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ type: 'registratie', entries: entries }) });
-            btn.innerText = "Succesvol Bijgewerkt!";
-            setTimeout(() => { btn.innerText = "Opslaan"; }, 2000);
-        }
-
-        window.saveReport = async () => {
-            const datum = document.getElementById('reportDate').value;
-            const naam = document.getElementById('reportParticipant').value;
-            const tekst = document.getElementById('reportText').value;
-
-            if (naam === 'Selecteer...' || !tekst) return alert("Vul alles in.");
-
-            const btn = document.getElementById('btn-save-report');
-            btn.innerText = "Versturen...";
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ type: 'verslag', datum, naam, tekst })
-                });
-                const result = await response.json();
-                alert(result.message); 
-                btn.innerText = "Verslag Opgeslagen!";
-            } catch (e) {
-                alert("Fout bij opslaan: " + e);
-            }
-            setTimeout(() => btn.innerText = "Verslag Versturen", 2000);
-        }
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
+
 </html>
