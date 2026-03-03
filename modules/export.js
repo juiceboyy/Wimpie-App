@@ -155,7 +155,7 @@ export function generateCordaanExcel(data, yearMonth) {
         ws['!cols'] = wscols;
     }
 
-    // Styling: Subtotaal rijen dikgedrukt maken
+    // Styling: Headers en Subtotaal rijen dikgedrukt maken
     if (ws['!ref']) {
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -163,7 +163,10 @@ export function generateCordaanExcel(data, yearMonth) {
             const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
             const cell = ws[firstCellRef];
 
-            if (cell && cell.v && String(cell.v).startsWith('Subtotaal')) {
+            const isHeader = (R === 0);
+            const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
+
+            if (isHeader || isSubtotal) {
                 // Loop door alle kolommen van deze rij en maak ze dikgedrukt
                 for (let C = range.s.c; C <= range.e.c; ++C) {
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
