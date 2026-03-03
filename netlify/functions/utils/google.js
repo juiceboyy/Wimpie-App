@@ -1,9 +1,15 @@
 const { google } = require('googleapis');
 
+let formattedPrivateKey = process.env.GOOGLE_PRIVATE_KEY || '';
+if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
+  formattedPrivateKey = formattedPrivateKey.slice(1, -1);
+}
+formattedPrivateKey = formattedPrivateKey.replace(/\\n/g, '\n');
+
 const auth = new google.auth.GoogleAuth({
   credentials: {
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\n/g, '\n') : undefined,
+    private_key: formattedPrivateKey,
   },
   scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
