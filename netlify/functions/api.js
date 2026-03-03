@@ -203,7 +203,8 @@ async function saveReport(payload) {
 }
 
 async function sendExport(payload) {
-  const toEmail = 'declaratieonderaannemers@cordaan.nl';
+  // TODO: TESTMODUS - Verander dit terug naar declaratieonderaannemers@cordaan.nl voordat we live gaan!
+  const toEmail = 'halfhide@gmail.com';
   const subject = 'Declaratiebestand ' + payload.filename;
   const textBody = 'Beste Cordaan,\n\nHierbij het declaratiebestand.\n\nMet vriendelijke groet.';
 
