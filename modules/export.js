@@ -165,10 +165,11 @@ export function generateCordaanExcel(data, yearMonth) {
                 const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
                 if (!ws[cellRef]) continue;
 
-                // 1. Bold Styling (Headers & Subtotalen)
+                // 1. Styling (Headers & Subtotalen)
                 if (isHeader || isSubtotal) {
                     if (!ws[cellRef].s) ws[cellRef].s = {};
                     ws[cellRef].s.font = { bold: true };
+                    ws[cellRef].s.fill = { fgColor: { rgb: isHeader ? "D9D9D9" : "F2F2F2" } };
                 }
 
                 // 2. Valuta Formattering (Kolom 8=Tarief, 9=Bedrag) - Niet op header
