@@ -36,7 +36,64 @@ exports.handler = async function(event, context) {
 
     // --- GET REQUEST ---
     if (event.httpMethod === 'GET') {
-      const { type, maand } = event.queryStringParameters || {};
+      const { type, maand, datum, naam } = event.queryStringParameters || {};
+
+      // 1. AANWEZIGHEID OPHALEN
+      if (datum && !type) {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: 'Registraties!A:D',
+        });
+        const rows = response.data.values || [];
+        const attendance = rows.slice(1)
+          .filter(row => row[0] && row[0].startsWith(datum))
+          .map(row => ({
+            naam: row[1],
+            dagdelen: row[2],
+            aanwezig: row[3]
+          }));
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(attendance),
+        };
+      }
+
+      // 2. BESTAAND VERSLAG OPHALEN
+      if (type === 'verslag') {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: 'Verslagen!A:C',
+        });
+        const rows = response.data.values || [];
+        const foundRow = rows.find(row => row[0] === datum && row[1] === naam);
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ tekst: foundRow ? foundRow[2] : "" }),
+        };
+      }
+
+      // 3. VERSLAG HISTORIE OPHALEN
+      if (type === 'verslag_historie') {
+        const response = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range: 'Verslagen!A:C',
+        });
+        const rows = response.data.values || [];
+        const history = rows.slice(1)
+          .filter(row => row[1] === naam)
+          .map(row => row[0])
+          .sort((a, b) => new Date(b) - new Date(a));
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(history),
+        };
+      }
 
       // EXPORT LOGICA
       if (type === 'export') {
