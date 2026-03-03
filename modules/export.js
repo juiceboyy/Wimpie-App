@@ -111,6 +111,9 @@ export function generateCordaanExcel(data, yearMonth) {
                 "Bedrag": subBedrag
             });
 
+            // Lege regel toevoegen voor leesbaarheid
+            excelRows.push({});
+
             // Reset tellers
             subMinuten = 0;
             subDagdelen = 0;
@@ -131,6 +134,48 @@ export function generateCordaanExcel(data, yearMonth) {
 
     // 5. Excel Generatie
     const ws = XLSX.utils.json_to_sheet(excelRows);
+
+    // Kolombreedtes automatisch aanpassen
+    if (excelRows.length > 0) {
+        const headers = Object.keys(excelRows[0]);
+        const wscols = headers.map(h => ({ wch: h.length }));
+
+        excelRows.forEach(row => {
+            headers.forEach((h, i) => {
+                const val = row[h];
+                if (val !== undefined && val !== null) {
+                    const len = String(val).length;
+                    if (len > wscols[i].wch) wscols[i].wch = len;
+                }
+            });
+        });
+
+        // Extra padding toevoegen
+        wscols.forEach(c => c.wch += 2);
+        ws['!cols'] = wscols;
+    }
+
+    // Styling: Subtotaal rijen dikgedrukt maken
+    if (ws['!ref']) {
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            // Check eerste kolom (index 0) voor 'Subtotaal'
+            const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
+            const cell = ws[firstCellRef];
+
+            if (cell && cell.v && String(cell.v).startsWith('Subtotaal')) {
+                // Loop door alle kolommen van deze rij en maak ze dikgedrukt
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[cellRef]) {
+                        if (!ws[cellRef].s) ws[cellRef].s = {};
+                        ws[cellRef].s.font = { bold: true };
+                    }
+                }
+            }
+        }
+    }
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Blad1");
     XLSX.writeFile(wb, filename);
