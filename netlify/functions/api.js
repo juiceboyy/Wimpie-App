@@ -177,9 +177,24 @@ exports.handler = async function(event, context) {
 
         const finalRows = [...filteredRows, ...newRows];
 
-        // 4. Sheet leegmaken en updaten
+        // 4. Deduplicatie: Filter dubbele entries (Datum + Naam)
+        const uniqueRows = [];
+        const seen = new Set();
+
+        // Loop van achteren naar voren om de laatste (meest recente) versie te behouden
+        for (let i = finalRows.length - 1; i >= 0; i--) {
+          const row = finalRows[i];
+          const key = `${row[0]}_${row[1]}`;
+
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueRows.unshift(row);
+          }
+        }
+
+        // 5. Sheet leegmaken en updaten
         await clearSheetData(range);
-        await updateSheetData(range, finalRows);
+        await updateSheetData(range, uniqueRows);
 
         return { statusCode: 200, headers, body: JSON.stringify({ message: "Opgeslagen" }) };
       }
