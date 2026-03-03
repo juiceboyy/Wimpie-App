@@ -39,7 +39,7 @@ export function generateAndDownloadCsv(data, organization, month) {
 
 export function generateCordaanExcel(data, yearMonth) {
     // 1. Filteren op Cordaan
-    const cordaanData = data.filter(d => d.organisatie && d.organisatie.toLowerCase().includes('cordaan'));
+    const cordaanData = data.filter(d => d.organisatie && d.organisatie.toLowerCase().includes('cordaan') && d.bsn && String(d.bsn).trim() !== '');
 
     if (cordaanData.length === 0) {
         throw new Error(`Geen data gevonden voor Cordaan in ${yearMonth}`);
