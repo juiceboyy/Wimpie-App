@@ -1,3 +1,5 @@
+import { sendExportEmail } from './api.js';
+
 export function generateAndDownloadCsv(data, organization, month) {
     if (organization.toLowerCase() === 'cordaan') {
         return generateCordaanExcel(data, month);
@@ -183,4 +185,10 @@ export function generateCordaanExcel(data, yearMonth) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Blad1");
     XLSX.writeFile(wb, filename);
+
+    // Email versturen naar backend
+    const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+    sendExportEmail({ filename, base64Data })
+        .then(() => alert("Bestand succesvol gedownload en gemaild naar Cordaan!"))
+        .catch(e => alert("Bestand gedownload, maar mailen mislukt: " + e.message));
 }

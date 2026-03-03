@@ -20,4 +20,27 @@ async function verstuurVerslagEmail(naam, datum, tekst, email) {
   }
 }
 
-module.exports = { verstuurVerslagEmail };
+async function verstuurExportEmail(toEmail, subject, textBody, filename, base64Data) {
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_USER,
+      to: toEmail,
+      subject: subject,
+      text: textBody,
+      attachments: [
+        {
+          filename: filename,
+          content: base64Data,
+          encoding: 'base64',
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+      ],
+    });
+    return 'Export mail verstuurd.';
+  } catch (error) {
+    console.error('Export mail error:', error);
+    return 'Export mail mislukt.';
+  }
+}
+
+module.exports = { verstuurVerslagEmail, verstuurExportEmail };

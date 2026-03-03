@@ -45,3 +45,16 @@ export async function fetchExport(month) {
     const response = await fetch(`${SCRIPT_URL}?type=export&maand=${month}`);
     return response.json();
 }
+
+export async function sendExportEmail(payload) {
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ ...payload, type: 'email_export' })
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Server error bij versturen export');
+    }
+    return response.json();
+}

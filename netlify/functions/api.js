@@ -1,4 +1,4 @@
-const { verstuurVerslagEmail } = require('./utils/mailer');
+const { verstuurVerslagEmail, verstuurExportEmail } = require('./utils/mailer');
 const { getSheetData, updateSheetData, appendSheetData, clearSheetData } = require('./utils/google');
 
 const HEADERS = {
@@ -51,6 +51,7 @@ async function handlePost(payload) {
   switch (payload.type) {
     case 'registratie': return await saveRegistration(payload);
     case 'verslag': return await saveReport(payload);
+    case 'email_export': return await sendExport(payload);
     default: throw new Error(`Onbekend type: ${payload.type}`);
   }
 }
@@ -199,4 +200,13 @@ async function saveReport(payload) {
   }
 
   return jsonResponse({ message: 'Verslag succesvol opgeslagen en verzonden.' });
+}
+
+async function sendExport(payload) {
+  const toEmail = 'declaratieonderaannemers@cordaan.nl';
+  const subject = 'Declaratiebestand ' + payload.filename;
+  const textBody = 'Beste Cordaan,\n\nHierbij het declaratiebestand.\n\nMet vriendelijke groet.';
+
+  await verstuurExportEmail(toEmail, subject, textBody, payload.filename, payload.base64Data);
+  return jsonResponse({ message: 'Export succesvol verzonden.' });
 }
