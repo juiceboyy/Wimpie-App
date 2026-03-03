@@ -99,10 +99,21 @@ exports.handler = async function(event, context) {
         range: 'Deelnemers!A:F',
       });
 
+      const rows = response.data.values || [];
+      const participants = rows.slice(1)
+        .filter(row => row[5] === 'Ja')
+        .map(row => ({
+          naam: row[0],
+          organisatie: row[1],
+          bsn: row[2],
+          code: row[3],
+          tarief: row[4]
+        }));
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(response.data.values || []),
+        body: JSON.stringify(participants),
       };
     }
 
