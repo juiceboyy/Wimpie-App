@@ -1,24 +1,20 @@
 import * as API from './modules/api.js';
 import { generateAndDownloadCsv } from './modules/export.js';
-const TOEGANGSCODE = '1055';
-
-let participantsData = [];
-let presenceState = {};
+import { verifyAccess } from './modules/auth.js';
+import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals } from './modules/ui.js';
+import * as State from './modules/state.js';
 
 // INIT
 function init() {
+    if (!verifyAccess()) return;
+
     exposeGlobals();
     setupEventListeners();
 
-    const invoer = prompt("Wat is de toegangscode voor Wimpie?");
-    if (invoer === TOEGANGSCODE) {
-        document.getElementById('presenceDate').valueAsDate = new Date();
-        document.getElementById('reportDate').valueAsDate = new Date();
-        lucide.createIcons();
-        fetchParticipants();
-    } else {
-        document.body.innerHTML = '<div class="flex h-screen items-center justify-center bg-red-50"><div class="text-center p-10"><h1 class="text-2xl font-bold text-red-600 mb-2">Geen Toegang</h1><p class="text-slate-600">Herlaad de pagina.</p></div></div>';
-    }
+    document.getElementById('presenceDate').valueAsDate = new Date();
+    document.getElementById('reportDate').valueAsDate = new Date();
+    lucide.createIcons();
+    fetchParticipants();
 }
 
 function setupEventListeners() {
@@ -39,36 +35,27 @@ function exposeGlobals() {
     window.togglePresence = togglePresence;
 }
 
-function switchTab(tab) {
-    ['presence', 'reports', 'export'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.add('hidden');
-        document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-        document.getElementById(`tab-${t}`).classList.add('text-slate-500');
-    });
-    document.getElementById(`view-${tab}`).classList.remove('hidden');
-    document.getElementById(`tab-${tab}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-    document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
-}
-
 async function fetchParticipants() {
     try {
-        participantsData = await API.fetchParticipants();
-        renderParticipants();
-        fillSelect();
+        const data = await API.fetchParticipants();
+        State.setParticipants(data);
+        renderParticipants(State.getParticipants(), State.getPresence());
+        fillSelect(State.getParticipants());
         document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
         loadAttendanceForDate();
     } catch (e) {
         console.error(e);
-        alert("Check je URL.");
+        State.setParticipants([]);
+        document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
     }
 }
 
 async function loadAttendanceForDate() {
     const datum = document.getElementById('presenceDate').value;
     if (!datum) return;
-    presenceState = {};
+    State.resetPresence();
     document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
-    renderParticipants();
+    renderParticipants(State.getParticipants(), State.getPresence());
 
     const btn = document.getElementById('btn-save-attendance');
     btn.innerText = "Gegevens ophalen...";
@@ -76,15 +63,16 @@ async function loadAttendanceForDate() {
 
     try {
         const historyData = await API.fetchAttendance(datum);
+        const participants = State.getParticipants();
         historyData.forEach(entry => {
-            const index = participantsData.findIndex(p => p.naam === entry.naam);
+            const index = participants.findIndex(p => p.naam === entry.naam);
             if (index > -1) {
-                presenceState[index] = true;
+                State.setPresence(index, true);
                 const select = document.getElementById(`dagdelen-${index}`);
                 if (select) select.value = entry.dagdelen;
             }
         });
-        renderParticipants();
+        renderParticipants(State.getParticipants(), State.getPresence());
     } catch (e) { console.error(e); }
     finally { btn.innerText = "Opslaan"; btn.disabled = false; }
 }
@@ -105,26 +93,10 @@ async function loadReportHistory() {
     try {
         const datums = await API.fetchReportHistory(naam);
         list.innerHTML = '';
-
-        if (datums.length === 0) {
-            list.innerHTML = '<span class="text-xs text-slate-400">Nog geen verslagen.</span>';
-        } else {
-            datums.forEach(d => {
-                // Maak NL datum van YYYY-MM-DD
-                const delen = d.split('-');
-                const nlDatum = `${delen[2]}-${delen[1]}`;
-
-                const badge = document.createElement('button');
-                badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
-                badge.innerText = nlDatum;
-                badge.onclick = () => {
-                    // Zet datum picker en laad verslag
-                    document.getElementById('reportDate').value = d;
-                    loadExistingReport();
-                };
-                list.appendChild(badge);
-            });
-        }
+        renderHistoryList(datums, (d) => {
+            document.getElementById('reportDate').value = d;
+            loadExistingReport();
+        });
     } catch (e) {
         console.error(e);
         list.innerHTML = '<span class="text-xs text-red-400">Fout bij laden.</span>';
@@ -134,52 +106,31 @@ async function loadReportHistory() {
 async function loadExistingReport() {
     const datum = document.getElementById('reportDate').value;
     const naam = document.getElementById('reportParticipant').value;
-    const textarea = document.getElementById('reportText');
-    const loader = document.getElementById('reportLoading');
 
     if (!datum || naam === 'Selecteer...') return;
 
-    textarea.value = "";
-    textarea.placeholder = "Zoeken naar bestaand verslag...";
-    textarea.disabled = true;
-    loader.classList.remove('hidden');
+    updateReportView("", "Zoeken naar bestaand verslag...", true);
 
     try {
         const data = await API.fetchReport(datum, naam);
-        textarea.value = data.tekst || "";
-        textarea.placeholder = "Typ hier je verslag...";
+        updateReportView(data.tekst, "Typ hier je verslag...", false);
     } catch (e) {
         console.error(e);
-        textarea.placeholder = "Fout bij ophalen.";
-    } finally {
-        textarea.disabled = false;
-        loader.classList.add('hidden');
-        textarea.focus();
+        updateReportView("", "Fout bij ophalen.", false);
     }
 }
 
 function togglePresence(index) {
-    const btn = document.getElementById(`btn-${index}`);
-    const card = document.getElementById(`card-${index}`);
-
-    if (presenceState[index]) {
-        presenceState[index] = false;
-        btn.classList.remove('bg-blue-500');
-        btn.classList.add('bg-slate-200');
-        card.classList.remove('ring-2', 'ring-blue-500');
-    } else {
-        presenceState[index] = true;
-        btn.classList.remove('bg-slate-200');
-        btn.classList.add('bg-blue-500');
-        card.classList.add('ring-2', 'ring-blue-500');
-    }
+    const newState = State.togglePresence(index);
+    updatePresenceVisuals(index, newState);
 }
 
 async function saveAttendance() {
     const datum = document.getElementById('presenceDate').value;
     const entries = [];
-    participantsData.forEach((p, index) => {
-        if (presenceState[index]) {
+    const currentPresence = State.getPresence();
+    State.getParticipants().forEach((p, index) => {
+        if (currentPresence[index]) {
             entries.push({ datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja" });
         }
     });
@@ -230,48 +181,6 @@ async function handleExport(organisatie) {
     } finally {
         status.classList.add('hidden');
     }
-}
-
-// --- UI HELPERS ---
-function renderParticipants() {
-    const container = document.getElementById('participantsList');
-    container.innerHTML = '';
-    participantsData.forEach((p, index) => {
-        const isActive = presenceState[index];
-        const activeClass = isActive ? 'ring-2 ring-blue-500' : '';
-        const btnColor = isActive ? 'bg-blue-500' : 'bg-slate-200';
-
-        const html = `
-        <div class="ios-card p-4 flex items-center justify-between transition-all cursor-pointer ${activeClass}" id="card-${index}" onclick="togglePresence(${index})">
-            <div>
-                <div class="font-bold text-slate-800">${p.naam}</div>
-                <div class="text-xs text-slate-500">${p.organisatie}</div>
-            </div>
-            <div class="flex items-center gap-3">
-                <select id="dagdelen-${index}" onclick="event.stopPropagation()" class="bg-slate-100 rounded text-sm p-2 outline-none">
-                    <option value="2">2 Dagdelen</option>
-                    <option value="1">1 Dagdeel</option>
-                </select>
-                <div id="btn-${index}" 
-                    class="w-10 h-10 rounded-full ${btnColor} flex items-center justify-center transition-colors">
-                    <i data-lucide="check" class="w-5 h-5 text-white"></i>
-                </div>
-            </div>
-        </div>`;
-        container.innerHTML += html;
-    });
-    lucide.createIcons();
-}
-
-function fillSelect() {
-    const select = document.getElementById('reportParticipant');
-    select.innerHTML = '<option>Selecteer...</option>';
-    participantsData.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.naam;
-        opt.innerText = p.naam;
-        select.appendChild(opt);
-    });
 }
 
 // Start de applicatie
