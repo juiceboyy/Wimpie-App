@@ -51,31 +51,4 @@ async function clearSheetData(range) {
   });
 }
 
-async function uploadToDrive(filename, base64Data) {
-  try {
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    if (!folderId) throw new Error("GOOGLE_DRIVE_FOLDER_ID is niet ingesteld!");
-
-    const authClient = await auth.getClient();
-    const drive = google.drive({ version: 'v3', auth: authClient });
-
-    const buffer = Buffer.from(base64Data, 'base64');
-    const stream = new Readable();
-    stream.push(buffer);
-    stream.push(null);
-
-    const response = await drive.files.create({
-      requestBody: { name: filename, parents: [folderId] },
-      media: { 
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
-        body: stream 
-      },
-    });
-    console.log(`Bestand succesvol geüpload naar Drive met ID: ${response.data.id}`);
-  } catch (error) {
-    console.error("Fout tijdens Drive upload:", error.message || error);
-    throw error; // Gooi de fout door zodat de aanroeper (api.js) hem ook ziet
-  }
-}
-
 module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData, uploadToDrive };

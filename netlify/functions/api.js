@@ -1,5 +1,5 @@
 const { verstuurVerslagEmail, verstuurExportEmail } = require('./utils/mailer');
-const { getSheetData, updateSheetData, appendSheetData, clearSheetData, uploadToDrive } = require('./utils/google');
+const { getSheetData, updateSheetData, appendSheetData, clearSheetData } = require('./utils/google');
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -223,12 +223,6 @@ Mochten er onduidelijkheden zijn, dan hoor ik het graag.
 Met vriendelijke groet,
 Ronald van Holst / Auck Boersma
 Wimpie & de Domino's`;
-
-  try {
-    await uploadToDrive(payload.filename, payload.base64Data);
-  } catch (error) {
-    console.error('Drive upload error:', error);
-  }
 
   await verstuurExportEmail(toEmail, ccEmail, subject, textBody, payload.filename, payload.base64Data);
   return jsonResponse({ message: 'Export succesvol verzonden.' });
