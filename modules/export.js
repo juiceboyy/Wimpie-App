@@ -66,11 +66,8 @@ export function generateCordaanExcel(data, yearMonth) {
         const formattedDate = `${parseInt(d)}/${parseInt(m)}/${y}`;
 
         // Tarief opschonen (€ weghalen, komma naar punt)
-        let tarief = 0;
-        if (row.tarief) {
-            const cleanTarief = String(row.tarief).replace('€', '').replace(',', '.').trim();
-            tarief = parseFloat(cleanTarief) || 0;
-        }
+        const cleanTarief = String(row.tarief || '').replace(/[^0-9,.-]/g, '').replace(',', '.');
+        const tarief = parseFloat(cleanTarief) || 0;
 
         const dagdelen = parseFloat(row.dagdelen) || 0;
         const minuten = dagdelen * 240;
@@ -155,25 +152,28 @@ export function generateCordaanExcel(data, yearMonth) {
         ws['!cols'] = wscols;
     }
 
-    // Styling: Headers en Subtotaal rijen dikgedrukt maken
+    // Styling & Formattering
     if (ws['!ref']) {
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let R = range.s.r; R <= range.e.r; ++R) {
-            // Check eerste kolom (index 0) voor 'Subtotaal'
             const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
             const cell = ws[firstCellRef];
-
             const isHeader = (R === 0);
             const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
 
-            if (isHeader || isSubtotal) {
-                // Loop door alle kolommen van deze rij en maak ze dikgedrukt
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (ws[cellRef]) {
-                        if (!ws[cellRef].s) ws[cellRef].s = {};
-                        ws[cellRef].s.font = { bold: true };
-                    }
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellRef]) continue;
+
+                // 1. Bold Styling (Headers & Subtotalen)
+                if (isHeader || isSubtotal) {
+                    if (!ws[cellRef].s) ws[cellRef].s = {};
+                    ws[cellRef].s.font = { bold: true };
+                }
+
+                // 2. Valuta Formattering (Kolom 8=Tarief, 9=Bedrag) - Niet op header
+                if (!isHeader && (C === 8 || C === 9)) {
+                    ws[cellRef].z = '"€ "#,##0.00';
                 }
             }
         }
