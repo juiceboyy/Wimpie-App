@@ -2,6 +2,7 @@ const SCRIPT_URL = '/.netlify/functions/api';
 
 export async function fetchParticipants() {
     const response = await fetch(SCRIPT_URL);
+    if (!response.ok) throw new Error('API gaf een error: ' + response.status);
     return response.json();
 }
 

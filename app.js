@@ -59,7 +59,8 @@ async function fetchParticipants() {
         loadAttendanceForDate();
     } catch (e) {
         console.error(e);
-        alert("Check je URL.");
+            participantsData = [];
+            document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
     }
 }
 
