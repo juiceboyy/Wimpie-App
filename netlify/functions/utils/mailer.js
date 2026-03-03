@@ -22,10 +22,9 @@ async function verstuurVerslagEmail(naam, datum, tekst, email) {
 
 async function verstuurExportEmail(toEmail, ccEmail, subject, textBody, filename, base64Data) {
   try {
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.SMTP_USER,
       to: toEmail,
-      cc: ccEmail,
       subject: subject,
       text: textBody,
       attachments: [
@@ -36,7 +35,13 @@ async function verstuurExportEmail(toEmail, ccEmail, subject, textBody, filename
           contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         },
       ],
-    });
+    };
+
+    if (ccEmail) {
+      mailOptions.cc = ccEmail;
+    }
+
+    await transporter.sendMail(mailOptions);
     return 'Export mail verstuurd.';
   } catch (error) {
     console.error('Export mail error:', error);
