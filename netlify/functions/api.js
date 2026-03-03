@@ -205,8 +205,23 @@ async function saveReport(payload) {
 async function sendExport(payload) {
   // TODO: TESTMODUS - Verander dit terug naar declaratieonderaannemers@cordaan.nl voordat we live gaan!
   const toEmail = 'halfhide@gmail.com';
+  
+  const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+  const [jaar, maandNummer] = payload.maand.split('-');
+  const maandNaam = maanden[parseInt(maandNummer, 10) - 1];
+
   const subject = 'Declaratiebestand ' + payload.filename;
-  const textBody = 'Beste Cordaan,\n\nHierbij het declaratiebestand.\n\nMet vriendelijke groet.';
+  const textBody = `Beste urenadministratie,
+
+In de bijlage sturen wij het ingevulde uren-importbestand van Wimpie & de Domino's over de maand ${maandNaam} ${jaar}.
+
+Het betreft de geleverde muziekdagbesteding voor onze deelnemers via Cordaan. Graag ontvangen wij een akkoord op deze uren, zodat wij de factuur volgens protocol kunnen indienen.
+
+Mochten er onduidelijkheden zijn, dan hoor ik het graag.
+
+Met vriendelijke groet,
+Ronald van Holst / Auck Boersma
+Wimpie & de Domino's`;
 
   await verstuurExportEmail(toEmail, subject, textBody, payload.filename, payload.base64Data);
   return jsonResponse({ message: 'Export succesvol verzonden.' });

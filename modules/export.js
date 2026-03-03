@@ -188,7 +188,7 @@ export function generateCordaanExcel(data, yearMonth) {
 
     // Email versturen naar backend
     const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-    sendExportEmail({ filename, base64Data })
+    sendExportEmail({ filename, base64Data, maand: yearMonth })
         .then(() => alert("Bestand succesvol gedownload en gemaild naar Cordaan!"))
         .catch(e => alert("Bestand gedownload, maar mailen mislukt: " + e.message));
 }
