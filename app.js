@@ -2,9 +2,7 @@ import * as API from './modules/api.js';
 import { generateAndDownloadCsv } from './modules/export.js';
 import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals } from './modules/ui.js';
-
-let participantsData = [];
-let presenceState = {};
+import * as State from './modules/state.js';
 
 // INIT
 function init() {
@@ -39,24 +37,25 @@ function exposeGlobals() {
 
 async function fetchParticipants() {
     try {
-        participantsData = await API.fetchParticipants();
-        renderParticipants(participantsData, presenceState);
-        fillSelect(participantsData);
+        const data = await API.fetchParticipants();
+        State.setParticipants(data);
+        renderParticipants(State.getParticipants(), State.getPresence());
+        fillSelect(State.getParticipants());
         document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
         loadAttendanceForDate();
     } catch (e) {
         console.error(e);
-            participantsData = [];
-            document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
+        State.setParticipants([]);
+        document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
     }
 }
 
 async function loadAttendanceForDate() {
     const datum = document.getElementById('presenceDate').value;
     if (!datum) return;
-    presenceState = {};
+    State.resetPresence();
     document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
-    renderParticipants(participantsData, presenceState);
+    renderParticipants(State.getParticipants(), State.getPresence());
 
     const btn = document.getElementById('btn-save-attendance');
     btn.innerText = "Gegevens ophalen...";
@@ -64,15 +63,16 @@ async function loadAttendanceForDate() {
 
     try {
         const historyData = await API.fetchAttendance(datum);
+        const participants = State.getParticipants();
         historyData.forEach(entry => {
-            const index = participantsData.findIndex(p => p.naam === entry.naam);
+            const index = participants.findIndex(p => p.naam === entry.naam);
             if (index > -1) {
-                presenceState[index] = true;
+                State.setPresence(index, true);
                 const select = document.getElementById(`dagdelen-${index}`);
                 if (select) select.value = entry.dagdelen;
             }
         });
-        renderParticipants(participantsData, presenceState);
+        renderParticipants(State.getParticipants(), State.getPresence());
     } catch (e) { console.error(e); }
     finally { btn.innerText = "Opslaan"; btn.disabled = false; }
 }
@@ -121,19 +121,16 @@ async function loadExistingReport() {
 }
 
 function togglePresence(index) {
-    if (presenceState[index]) {
-        presenceState[index] = false;
-    } else {
-        presenceState[index] = true;
-    }
-    updatePresenceVisuals(index, presenceState[index]);
+    const newState = State.togglePresence(index);
+    updatePresenceVisuals(index, newState);
 }
 
 async function saveAttendance() {
     const datum = document.getElementById('presenceDate').value;
     const entries = [];
-    participantsData.forEach((p, index) => {
-        if (presenceState[index]) {
+    const currentPresence = State.getPresence();
+    State.getParticipants().forEach((p, index) => {
+        if (currentPresence[index]) {
             entries.push({ datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja" });
         }
     });
