@@ -203,8 +203,9 @@ async function saveReport(payload) {
 }
 
 async function sendExport(payload) {
-  const toEmail = 'declaratieonderaannemers@cordaan.nl';
-  const ccEmail = 'auckboersma@gmail.com';
+  // const toEmail = 'declaratieonderaannemers@cordaan.nl';
+  const toEmail = 'halfhide@gmail.com';
+  // const ccEmail = 'auckboersma@gmail.com';
   
   const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
   const [jaar, maandNummer] = payload.maand.split('-');
