@@ -72,21 +72,29 @@ exports.handler = async function(event, context) {
       if (type === 'export') {
         if (!maand) throw new Error('Geen maand opgegeven voor export.');
 
-        // Data ophalen uit beide sheets
-        const [registraties, deelnemers] = await Promise.all([
+        // Data ophalen uit sheets
+        const [registraties, deelnemers, legenda] = await Promise.all([
           getSheetData('Registraties!A:D'),
           getSheetData('Deelnemers!A:F'),
+          getSheetData('Legenda!A:B'),
         ]);
 
+        // Legenda map opbouwen (Code -> Omschrijving)
+        const legendaMap = {};
+        (legenda || []).slice(1).forEach(row => {
+          if (row[0]) legendaMap[row[0]] = row[1];
+        });
+
         // Mapping maken van deelnemers (Naam -> Info)
-        // Aanname kolommen Deelnemers: A=Naam, B=Organisatie, C=BSN, D=Activiteit
+        // Aanname kolommen Deelnemers: A=Naam, B=Organisatie, C=BSN, D=Code, E=Tarief
         const deelnemerMap = {};
         deelnemers.slice(1).forEach(row => {
           if (row[0]) {
             deelnemerMap[row[0]] = {
               organisatie: row[1] || '',
               bsn: row[2] || '',
-              activiteit: row[3] || '',
+              code: row[3] || '',
+              tarief: row[4] || '',
             };
           }
         });
@@ -103,13 +111,18 @@ exports.handler = async function(event, context) {
           .map(row => {
             const naam = row[1];
             const info = deelnemerMap[naam] || {};
+            const code = info.code || '';
+            const omschrijving = legendaMap[code] || code;
+
             return {
               datum: row[0],
               naam: naam,
               dagdelen: row[2],
               organisatie: info.organisatie || '',
               bsn: info.bsn || '',
-              activiteit: info.activiteit || '',
+              code: code,
+              tarief: info.tarief || '',
+              activiteit_omschrijving: omschrijving,
             };
           });
 

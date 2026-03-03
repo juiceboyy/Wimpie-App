@@ -21,7 +21,7 @@ export function generateAndDownloadCsv(data, organization, month) {
             const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
             const tijdVan = "09:00";
             const tijdTot = parseInt(row.dagdelen) === 2 ? "17:00" : "13:00";
-            csvContent += `${row.naam};${row.activiteit};${nlDatum};${tijdVan};${tijdTot}\r\n`;
+            csvContent += `${row.naam};${row.code};${nlDatum};${tijdVan};${tijdTot}\r\n`;
         });
     }
 
@@ -45,8 +45,22 @@ export function generateCordaanExcel(data, yearMonth) {
         throw new Error(`Geen data gevonden voor Cordaan in ${yearMonth}`);
     }
 
-    // 2. Data Transformatie
-    const mappedData = cordaanData.map(row => {
+    // 2. Sorteren: Alfabetisch op Naam, daarna Chronologisch op Datum
+    cordaanData.sort((a, b) => {
+        if (a.naam < b.naam) return -1;
+        if (a.naam > b.naam) return 1;
+        return new Date(a.datum) - new Date(b.datum);
+    });
+
+    // 3. Data Transformatie & Subtotalen
+    const excelRows = [];
+    let subMinuten = 0;
+    let subDagdelen = 0;
+    let subBedrag = 0;
+
+    for (let i = 0; i < cordaanData.length; i++) {
+        const row = cordaanData[i];
+
         // Datum conversie YYYY-MM-DD -> D/M/YYYY
         const [y, m, d] = row.datum.split('-');
         const formattedDate = `${parseInt(d)}/${parseInt(m)}/${y}`;
@@ -62,31 +76,61 @@ export function generateCordaanExcel(data, yearMonth) {
         const minuten = dagdelen * 240;
         const bedrag = dagdelen * tarief;
 
-        return {
+        // Rij toevoegen
+        excelRows.push({
             "Naam": row.naam,
             "BSN": row.bsn,
-            "Medewerkernummer": "",
-            "Activiteit": row.activiteit,
+            "Medewerkernummer": "1965203",
+            "Activiteit": row.activiteit_omschrijving || row.code, // Gebruik omschrijving uit legenda, fallback op code
             "Begindatum": formattedDate,
             "Minuten": minuten,
             "Dagdelen": dagdelen,
-            "VG": "",
+            "VG": row.code, // Code komt in kolom VG
             "Tarief": tarief,
             "Bedrag": bedrag
-        };
-    });
+        });
 
-    // 3. Bestandsnaam genereren
+        // Subtotalen bijwerken
+        subMinuten += minuten;
+        subDagdelen += dagdelen;
+        subBedrag += bedrag;
+
+        // Control Break: Check of volgende rij een andere naam heeft of dat dit de laatste rij is
+        const nextRow = cordaanData[i + 1];
+        if (!nextRow || nextRow.naam !== row.naam) {
+            excelRows.push({
+                "Naam": "Subtotaal " + row.naam,
+                "BSN": "",
+                "Medewerkernummer": "",
+                "Activiteit": "",
+                "Begindatum": "",
+                "Minuten": subMinuten,
+                "Dagdelen": subDagdelen,
+                "VG": "",
+                "Tarief": "",
+                "Bedrag": subBedrag
+            });
+
+            // Reset tellers
+            subMinuten = 0;
+            subDagdelen = 0;
+            subBedrag = 0;
+        }
+    }
+
+    // 4. Bestandsnaam genereren
     const [yearStr, monthStr] = yearMonth.split('-');
     const year = parseInt(yearStr);
     const monthIndex = parseInt(monthStr) - 1;
     const lastDay = new Date(year, monthIndex + 1, 0).getDate(); // Laatste dag van de maand
     const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
     
-    const filename = `${yearStr.slice(2)}${monthStr}${lastDay} - Controlebestand Wimpie&Domino's - ${monthNames[monthIndex]} '${yearStr.slice(2)}.xlsx`;
+    // Format: YYMMDD - ...
+    const shortYear = yearStr.slice(2);
+    const filename = `${shortYear}${monthStr}${lastDay} - Controlebestand Wimpie&Domino's - ${monthNames[monthIndex]} '${shortYear}.xlsx`;
 
-    // 4. Excel Generatie
-    const ws = XLSX.utils.json_to_sheet(mappedData);
+    // 5. Excel Generatie
+    const ws = XLSX.utils.json_to_sheet(excelRows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Blad1");
     XLSX.writeFile(wb, filename);
