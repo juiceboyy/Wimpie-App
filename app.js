@@ -37,17 +37,6 @@ function exposeGlobals() {
     window.togglePresence = togglePresence;
 }
 
-function switchTab(tab) {
-    ['presence', 'reports', 'export'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.add('hidden');
-        document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
-        document.getElementById(`tab-${t}`).classList.add('text-slate-500');
-    });
-    document.getElementById(`view-${tab}`).classList.remove('hidden');
-    document.getElementById(`tab-${tab}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-    document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
-}
-
 async function fetchParticipants() {
     try {
         participantsData = await API.fetchParticipants();
