@@ -21,16 +21,6 @@ export function generateAndDownloadCsv(data, organization, month) {
 
     if (organization === 'cordaan') {
         // Fallback of oude logica verwijderd, wordt nu afgevangen door generateCordaanExcel
-    } else if (organization === 'amsta') {
-        // Amsta Format: Volledige naam;Product;Datum;Tijd van;Tijd tot
-        csvContent += "Volledige naam;Product;Datum;Tijd van;Tijd tot\r\n";
-        orgData.forEach(row => {
-            const d = row.datum.split('-');
-            const nlDatum = `${d[2]}-${d[1]}-${d[0]}`;
-            const tijdVan = "09:00";
-            const tijdTot = parseInt(row.dagdelen) === 2 ? "17:00" : "13:00";
-            csvContent += `${row.naam};${row.code};${nlDatum};${tijdVan};${tijdTot}\r\n`;
-        });
     }
 
     // Download triggeren
@@ -197,7 +187,7 @@ export function generateCordaanExcel(data, yearMonth) {
 
         // Email versturen naar backend
         const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-        await sendExportEmail({ filename, base64Data, maand: yearMonth });
+        await sendExportEmail({ filename, base64Data, maand: yearMonth, organisatie: 'cordaan' });
     });
 }
 
@@ -253,6 +243,6 @@ export function generateAmstaExcel(data, month, filename) {
 
         // Base64 genereren en versturen
         const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-        await sendExportEmail({ filename, base64Data, maand: month });
+        await sendExportEmail({ filename, base64Data, maand: month, organisatie: 'amsta' });
     });
 }
