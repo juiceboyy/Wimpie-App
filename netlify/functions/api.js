@@ -221,8 +221,8 @@ async function sendExport(payload) {
   }
 
   // TODO: TESTMODUS - Verander pas naar echte adressen als ALLES 100% is goedgekeurd!
-  const toEmail = 'halfhide@gmail.com'; // TODO: Verander dit later naar targetEmail
-  const ccEmail = ''; // TODO: Verander dit later naar 'auckboersma@gmail.com'
+  const toEmail = targetEmail; // TODO: Verander dit later naar targetEmail
+  const ccEmail = 'auckboersma@gmail.com'; // TODO: Verander dit later naar 'auckboersma@gmail.com'
 
   const subject = 'Declaratiebestand ' + payload.filename;
   let textBody = `Beste urenadministratie,
