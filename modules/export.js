@@ -199,6 +199,9 @@ export function generateAmstaExcel(data, month, filename) {
         throw new Error(`Geen data gevonden voor Amsta in ${month}`);
     }
 
+    // Sorteren op datum
+    amstaData.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+
     // 2. Mappen naar Amsta format
     const amstaRows = amstaData.map(row => {
         // Datum omzetten van YYYY-MM-DD naar DD-mmm-YYYY (bijv 12-jan-2026)

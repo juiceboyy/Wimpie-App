@@ -160,7 +160,7 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
                 <button id="cancelExportBtn" class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded transition-colors">Annuleren</button>
                 <button id="confirmExportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow transition-colors flex items-center gap-2">
                     <i data-lucide="send" class="w-4 h-4"></i>
-                    Akkoord: Opslaan in Drive & Mailen
+                    Akkoord: Beveiligd Mailen
                 </button>
             </div>
         </div>
