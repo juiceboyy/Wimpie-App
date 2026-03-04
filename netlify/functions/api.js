@@ -205,20 +205,31 @@ async function saveReport(payload) {
 }
 
 async function sendExport(payload) {
-  // TODO: TESTMODUS - Verander pas naar echte adressen als ALLES 100% is goedgekeurd!
-  const toEmail = 'halfhide@gmail.com';
-  const ccEmail = ''; // Leeg laten tijdens testen
-  
   const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
   const [jaar, maandNummer] = payload.maand.split('-');
   const maandNaam = maanden[parseInt(maandNummer, 10) - 1];
+
+  let targetEmail = '';
+  let orgNaam = '';
+  if (payload.organisatie === 'amsta') {
+    targetEmail = 'crediteuren@amsta.nl'; // TODO: Vul echte AMSTA adres in
+    orgNaam = 'AMSTA';
+  } else {
+    // Fallback / Standaard is Cordaan
+    targetEmail = 'declaratieonderaannemers@cordaan.nl';
+    orgNaam = 'Cordaan';
+  }
+
+  // TODO: TESTMODUS - Verander pas naar echte adressen als ALLES 100% is goedgekeurd!
+  const toEmail = 'halfhide@gmail.com'; // TODO: Verander dit later naar targetEmail
+  const ccEmail = ''; // TODO: Verander dit later naar 'auckboersma@gmail.com'
 
   const subject = 'Declaratiebestand ' + payload.filename;
   const textBody = `Beste urenadministratie,
 
 In de bijlage sturen wij het ingevulde uren-importbestand van Wimpie & de Domino's over de maand ${maandNaam} ${jaar}.
 
-Het betreft de geleverde muziekdagbesteding voor onze deelnemers via Cordaan. Graag ontvangen wij een akkoord op deze uren, zodat wij de factuur volgens protocol kunnen indienen.
+Het betreft de geleverde muziekdagbesteding voor onze deelnemers via ${orgNaam}. Graag ontvangen wij een akkoord op deze uren, zodat wij de factuur volgens protocol kunnen indienen.
 
 Mochten er onduidelijkheden zijn, dan hoor ik het graag.
 
