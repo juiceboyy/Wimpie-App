@@ -225,11 +225,17 @@ async function sendExport(payload) {
   const ccEmail = ''; // TODO: Verander dit later naar 'auckboersma@gmail.com'
 
   const subject = 'Declaratiebestand ' + payload.filename;
-  const textBody = `Beste urenadministratie,
+  let textBody = `Beste urenadministratie,
 
 In de bijlage sturen wij het ingevulde uren-importbestand van Wimpie & de Domino's over de maand ${maandNaam} ${jaar}.
 
-Het betreft de geleverde muziekdagbesteding voor onze deelnemers via ${orgNaam}. Graag ontvangen wij een akkoord op deze uren, zodat wij de factuur volgens protocol kunnen indienen.
+Het betreft de geleverde muziekdagbesteding voor onze deelnemers via ${orgNaam}.`;
+
+  if (payload.organisatie === 'amsta') {
+    textBody += `\n\nLet op: in verband met de AVG en privacy is de bijlage veilig ingepakt in een versleuteld ZIP-bestand. U ontvangt het benodigde wachtwoord om dit bestand te openen direct hierna in een aparte e-mail.`;
+  }
+
+  textBody += `\n\nGraag ontvangen wij een akkoord op deze uren, zodat wij de factuur volgens protocol kunnen indienen.
 
 Mochten er onduidelijkheden zijn, dan hoor ik het graag.
 
