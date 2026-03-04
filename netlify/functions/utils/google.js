@@ -75,8 +75,8 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
     if (vr.values) {
       vr.values.forEach(row => {
         const invoiceStr = row[0]; // row[0] is hier kolom B, omdat we alleen B ophalen
-        if (invoiceStr && invoiceStr.startsWith(`${currentYear}-`)) {
-          const numPart = parseInt(invoiceStr.split('-')[1], 10);
+        if (invoiceStr && invoiceStr.startsWith(`${currentYear}.`)) {
+          const numPart = parseInt(invoiceStr.split('.')[1], 10);
           if (!isNaN(numPart) && numPart > maxNumber) {
             maxNumber = numPart;
           }
@@ -87,7 +87,7 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
 
   // 3. Bereken het nieuwe nummer
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
-  const newFactuurNummer = `${currentYear}-${newNumberStr}`;
+  const newFactuurNummer = `${currentYear}.${newNumberStr}`;
 
   // 4. Maak de nieuwe rij op met de 12-koloms indeling
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });

@@ -289,14 +289,17 @@ export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     sortedNames.forEach(name => {
         const p = participants[name];
         const total = p.dagdelen * p.tarief;
-        grandTotal += total;
 
-        tableBody.push([
-            p.naam,
-            p.dagdelen.toString(),
-            `€ ${p.tarief.toFixed(2).replace('.', ',')}`,
-            `€ ${total.toFixed(2).replace('.', ',')}`
-        ]);
+        if (total > 0) {
+            grandTotal += total;
+
+            tableBody.push([
+                p.naam,
+                p.dagdelen.toString(),
+                `€ ${p.tarief.toFixed(2).replace('.', ',')}`,
+                `€ ${total.toFixed(2).replace('.', ',')}`
+            ]);
+        }
     });
 
     // Totaal rij
