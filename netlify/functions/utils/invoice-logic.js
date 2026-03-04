@@ -39,7 +39,14 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
   const newFactuurNummer = `${currentYear}.${newNumberStr}`;
 
-  // 4. Maak de nieuwe rij op met de 12-koloms indeling
+  // 4. Bepaal de EXACTE lege rij voor het huidige kwartaal
+  const currentQuarterIndex = currentQuarter - 1;
+  const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
+  // Als de lijst 3 rijen lang is (1 header, 2 facturen), moet de volgende op rij 4.
+  // Als de lijst leeg is (lengte 0), beginnen we op rij 2.
+  const nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+
+  // 5. Maak de nieuwe rij op met de 12-koloms indeling
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const omschrijving = "Muziekdagbesteding"; // Standaard omschrijving
 
@@ -58,10 +65,10 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
     ''                  // Kolom L: opmerkingen
   ];
 
-  // 5. Schrijf de nieuwe factuur weg
-  await sheets.spreadsheets.values.append({
+  // 6. Schrijf de nieuwe factuur weg via UPDATE (Sniper methode)
+  await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${targetSheet}!A:L`,
+    range: `${targetSheet}!A${nextRow}:L${nextRow}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [rowData]
