@@ -61,7 +61,7 @@ export function generateCordaanExcel(data, yearMonth) {
 
         // Datum conversie YYYY-MM-DD -> D/M/YYYY
         const [y, m, d] = row.datum.split('-');
-        const formattedDate = `${parseInt(d)}/${parseInt(m)}/${y}`;
+        const formattedDate = `${parseInt(d)}-${parseInt(m)}-${y}`;
 
         // Tarief opschonen (€ weghalen, komma naar punt)
         const cleanTarief = String(row.tarief || '').replace(/[^0-9,.-]/g, '').replace(',', '.');
@@ -75,7 +75,7 @@ export function generateCordaanExcel(data, yearMonth) {
         excelRows.push({
             "Naam": row.naam,
             "BSN": row.bsn,
-            "Medewerkernummer": "1965203",
+            "Medewerkernummer": "9125107",
             "Activiteit": row.activiteit_omschrijving || row.code, // Gebruik omschrijving uit legenda, fallback op code
             "Begindatum": formattedDate,
             "Minuten": minuten,
