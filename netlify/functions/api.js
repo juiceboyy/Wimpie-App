@@ -205,9 +205,9 @@ async function saveReport(payload) {
 }
 
 async function sendExport(payload) {
-  const toEmail = 'declaratieonderaannemers@cordaan.nl';
-  // const toEmail = 'halfhide@gmail.com';
-  const ccEmail = 'auckboersma@gmail.com'; // TODO: Verander dit naar auckboersma@gmail.com voor live gaan
+  // TODO: TESTMODUS - Verander pas naar echte adressen als ALLES 100% is goedgekeurd!
+  const toEmail = 'halfhide@gmail.com';
+  const ccEmail = ''; // Leeg laten tijdens testen
   
   const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
   const [jaar, maandNummer] = payload.maand.split('-');
