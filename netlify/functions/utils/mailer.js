@@ -27,18 +27,23 @@ async function verstuurExportEmail(toEmail, ccEmail, subject, textBody, filename
       to: toEmail,
       subject: subject,
       text: textBody,
-      attachments: [
-        {
-          filename: filename,
-          content: base64Data,
-          encoding: 'base64',
-          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        },
-      ],
     };
 
     if (ccEmail) {
       mailOptions.cc = ccEmail;
+    }
+
+    // Voeg bijlage alleen toe als filename en base64Data aanwezig zijn
+    if (filename && base64Data) {
+      const isZip = filename.toLowerCase().endsWith('.zip');
+      mailOptions.attachments = [
+        {
+          filename: filename,
+          content: base64Data,
+          encoding: 'base64',
+          contentType: isZip ? 'application/zip' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+      ];
     }
 
     await transporter.sendMail(mailOptions);
