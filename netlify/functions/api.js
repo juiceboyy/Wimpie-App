@@ -1,4 +1,4 @@
-const { getNextInvoiceNumberAndLog } = require('./utils/google');
+const { getNextInvoiceNumberAndLog } = require('./utils/invoice-logic');
 const { getAttendance, getReport, getReportHistory, getParticipants, getExportData, saveRegistration, saveReport } = require('./utils/sheet-logic');
 const { sendExport } = require('./utils/export-logic');
 
