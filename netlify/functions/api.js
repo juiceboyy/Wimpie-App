@@ -1,5 +1,5 @@
 const { verstuurVerslagEmail, verstuurExportEmail } = require('./utils/mailer');
-const { getSheetData, updateSheetData, appendSheetData, clearSheetData } = require('./utils/google');
+const { getSheetData, updateSheetData, appendSheetData, clearSheetData, getNextInvoiceNumberAndLog } = require('./utils/google');
 const archiver = require('archiver');
 archiver.registerFormat('zip-encrypted', require('archiver-zip-encrypted'));
 
@@ -54,6 +54,14 @@ async function handlePost(payload) {
     case 'registratie': return await saveRegistration(payload);
     case 'verslag': return await saveReport(payload);
     case 'email_export': return await sendExport(payload);
+    case 'generate_invoice_number':
+      try {
+        const invoiceNumber = await getNextInvoiceNumberAndLog(payload.organisatie, payload.bedrag);
+        return jsonResponse({ success: true, invoiceNumber: invoiceNumber });
+      } catch (error) {
+        console.error("Fout bij ophalen factuurnummer:", error);
+        return jsonResponse({ error: 'Kon factuurnummer niet genereren.' }, 500);
+      }
     default: throw new Error(`Onbekend type: ${payload.type}`);
   }
 }

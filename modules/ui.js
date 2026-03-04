@@ -105,7 +105,7 @@ export function updateReportView(text, placeholder, isLoading) {
     }
 }
 
-export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCallback) {
+export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCallback, onInvoiceCallback) {
     // Bestaande modal verwijderen indien aanwezig
     const existingModal = document.getElementById('exportModal');
     if (existingModal) existingModal.remove();
@@ -158,6 +158,7 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
 
             <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
                 <button id="cancelExportBtn" class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded transition-colors">Annuleren</button>
+                ${onInvoiceCallback ? `<button id="invoiceExportBtn" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded shadow transition-colors flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> Factuur (PDF)</button>` : ''}
                 <button id="confirmExportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow transition-colors flex items-center gap-2">
                     <i data-lucide="send" class="w-4 h-4"></i>
                     Akkoord: Verstuur per e-mail
@@ -190,4 +191,21 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
             btn.innerHTML = `Opnieuw proberen`;
         }
     };
+
+    if (onInvoiceCallback) {
+        document.getElementById('invoiceExportBtn').onclick = async function() {
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin mr-2">⏳</span> Genereren...`;
+            try {
+                await onInvoiceCallback();
+                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Gedownload`;
+            } catch (e) {
+                console.error(e);
+                alert("Fout bij genereren factuur: " + e.message);
+                btn.innerHTML = `Opnieuw proberen`;
+                btn.disabled = false;
+            }
+        };
+    }
 }

@@ -58,3 +58,13 @@ export async function sendExportEmail(payload) {
     }
     return response.json();
 }
+
+export async function fetchInvoiceNumber(organisatie, bedrag) {
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'generate_invoice_number', organisatie, bedrag })
+    });
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    return result.invoiceNumber;
+}
