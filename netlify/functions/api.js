@@ -51,7 +51,9 @@ async function handleGet(params) {
 async function handlePost(payload) {
   switch (payload.type) {
     case 'registratie': return jsonResponse(await saveRegistration(payload));
-    case 'verslag': return jsonResponse(await saveReport(payload));
+    case 'verslag': 
+      const reportResult = await saveReport(payload);
+      return jsonResponse({ ...reportResult, message: reportResult.message || 'Het verslag is succesvol verstuurd en opgeslagen.' });
     case 'email_export': return jsonResponse(await sendExport(payload));
     case 'generate_invoice_number':
       try {

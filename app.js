@@ -156,7 +156,7 @@ async function saveReport() {
 
     try {
         const result = await API.postReport({ datum, naam, tekst });
-        alert(result.message);
+        alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
         btn.innerText = "Verslag Opgeslagen!";
     } catch (e) {
         alert("Fout bij opslaan: " + e);
