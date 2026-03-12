@@ -173,7 +173,7 @@ async function handleExport(organisatie) {
 
     try {
         const data = await API.fetchExport(maandInput);
-        generateAndDownloadCsv(data, organisatie, maandInput);
+        await generateAndDownloadCsv(data, organisatie, maandInput);
 
     } catch (e) {
         console.error(e);

@@ -1,9 +1,15 @@
 import { generateAmstaExcel } from './amsta.js';
 import { generateCordaanExcel } from './cordaan.js';
+import { generateThomashuisInvoicePDF } from './invoice.js';
 
-export function generateAndDownloadCsv(data, organization, month) {
+export async function generateAndDownloadCsv(data, organization, month) {
     if (organization.toLowerCase() === 'cordaan') {
         return generateCordaanExcel(data, month);
+    }
+
+    if (organization.toLowerCase().includes('thomashuis')) {
+        const [yearStr, monthStr] = month.split('-');
+        return await generateThomashuisInvoicePDF(data, monthStr, yearStr);
     }
 
     if (organization.toLowerCase() === 'amsta') {
