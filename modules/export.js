@@ -2,7 +2,7 @@ import { generateAmstaExcel } from './amsta.js';
 import { generateCordaanExcel } from './cordaan.js';
 import { generateThomashuisInvoicePDF } from './invoice.js';
 
-export async function generateAndDownloadCsv(data, organization, month) {
+export async function handleExportAction(data, organization, month) {
     if (organization.toLowerCase() === 'cordaan') {
         return generateCordaanExcel(data, month);
     }

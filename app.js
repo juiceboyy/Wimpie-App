@@ -1,5 +1,5 @@
 import * as API from './modules/api.js';
-import { generateAndDownloadCsv } from './modules/export.js';
+import { handleExportAction } from './modules/export.js';
 import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals } from './modules/ui.js';
 import * as State from './modules/state.js';
@@ -173,7 +173,7 @@ async function handleExport(organisatie) {
 
     try {
         const data = await API.fetchExport(maandInput);
-        await generateAndDownloadCsv(data, organisatie, maandInput);
+        await handleExportAction(data, organisatie, maandInput);
 
     } catch (e) {
         console.error(e);
