@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const { Readable } = require('stream');
 
 let formattedPrivateKey = process.env.GOOGLE_PRIVATE_KEY || '';
 if (formattedPrivateKey.startsWith('"') && formattedPrivateKey.endsWith('"')) {
@@ -11,7 +12,7 @@ const auth = new google.auth.GoogleAuth({
     client_email: process.env.GOOGLE_CLIENT_EMAIL,
     private_key: formattedPrivateKey,
   },
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file'],
 });
 
 const sheets = google.sheets({ version: 'v4', auth });
@@ -50,4 +51,4 @@ async function clearSheetData(range) {
   });
 }
 
-module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData };
+module.exports = { getSheetData, updateSheetData, appendSheetData, clearSheetData, auth };

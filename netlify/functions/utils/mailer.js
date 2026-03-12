@@ -20,4 +20,38 @@ async function verstuurVerslagEmail(naam, datum, tekst, email) {
   }
 }
 
-module.exports = { verstuurVerslagEmail };
+async function verstuurExportEmail(toEmail, ccEmail, subject, textBody, filename, base64Data) {
+  try {
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: toEmail,
+      subject: subject,
+      text: textBody,
+    };
+
+    if (ccEmail) {
+      mailOptions.cc = ccEmail;
+    }
+
+    // Voeg bijlage alleen toe als filename en base64Data aanwezig zijn
+    if (filename && base64Data) {
+      const isZip = filename.toLowerCase().endsWith('.zip');
+      mailOptions.attachments = [
+        {
+          filename: filename,
+          content: base64Data,
+          encoding: 'base64',
+          contentType: isZip ? 'application/zip' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+      ];
+    }
+
+    await transporter.sendMail(mailOptions);
+    return 'Export mail verstuurd.';
+  } catch (error) {
+    console.error('Export mail error:', error);
+    return 'Export mail mislukt.';
+  }
+}
+
+module.exports = { verstuurVerslagEmail, verstuurExportEmail };
