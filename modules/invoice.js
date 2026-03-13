@@ -101,7 +101,7 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
     // 1. Filter & Aggregate
     const clientName = "Casper Slabbers";
     // Filter uitsluitend op de specifieke cliënt
-    const clientData = data.filter(d => d.naam === clientName);
+    const clientData = data.filter(d => d.naam && d.naam.trim().toLowerCase() === clientName.toLowerCase());
     const days = clientData.length;
 
     // Validatie
@@ -121,6 +121,13 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
     const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
     const mIndex = parseInt(monthStr, 10) - 1;
     const displayMonth = (mIndex >= 0 && mIndex < 12) ? monthNames[mIndex] : monthStr;
+
+    // Datums verzamelen en formatteren
+    // We splitsen op '-' om tijdzone-issues te voorkomen (YYYY-MM-DD)
+    const uniqueDays = [...new Set(clientData.map(d => parseInt(d.datum.split('-')[2], 10)))].sort((a, b) => a - b);
+    // Formatteer naar "4, 11, 18 en 25"
+    const daysString = uniqueDays.join(', ').replace(/, ([^,]*)$/, ' en $1');
+    const presenceText = `Aanwezig op: ${daysString} ${displayMonth}`;
 
     // 3. PDF Definitie
     const docDefinition = {
@@ -151,6 +158,11 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
                             days.toString(),
                             `€ ${rate.toFixed(2).replace('.', ',')}`,
                             `€ ${totalAmount.toFixed(2).replace('.', ',')}`
+                        ],
+                        // Extra rij met specificatie van datums
+                        [
+                            { text: presenceText, colSpan: 4, italics: true, fontSize: 10, color: '#555555', margin: [0, 0, 0, 5] },
+                            {}, {}, {}
                         ],
                         // Totaal rij
                         [
