@@ -57,7 +57,7 @@ async function handlePost(payload) {
     case 'email_export': return jsonResponse(await sendExport(payload));
     case 'generate_invoice_number':
       try {
-        const invoiceNumber = await getNextInvoiceNumberAndLog(payload.organisatie, payload.bedrag);
+        const invoiceNumber = await getNextInvoiceNumberAndLog(payload.organisatie, payload.bedrag, payload.omschrijving);
         return jsonResponse({ success: true, invoiceNumber: invoiceNumber });
       } catch (error) {
         console.error("Fout bij ophalen factuurnummer:", error);

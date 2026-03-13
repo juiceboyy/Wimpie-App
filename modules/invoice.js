@@ -55,7 +55,7 @@ export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     ]);
 
     // 2. Factuurnummer Ophalen
-    const invoiceNumber = await fetchInvoiceNumber('Cordaan', grandTotal);
+    const invoiceNumber = await fetchInvoiceNumber('Cordaan', grandTotal, `Muziekdagbesteding Cordaan ${monthStr}-${yearStr}`);
 
     // 3. PDF Definitie
     const docDefinition = {
@@ -114,13 +114,14 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
     const rate = 100.00;
     const totalAmount = days * rate;
 
-    // 2. Factuurnummer Ophalen
-    const invoiceNumber = await fetchInvoiceNumber('Thomashuis Lisse', totalAmount);
-
     // Helper voor maandnaam
     const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
     const mIndex = parseInt(monthStr, 10) - 1;
     const displayMonth = (mIndex >= 0 && mIndex < 12) ? monthNames[mIndex] : monthStr;
+
+    // 2. Factuurnummer Ophalen (met dynamische omschrijving)
+    const omschrijving = `Muziekdagbesteding Casper Slabbers ${displayMonth} ${yearStr}`;
+    const invoiceNumber = await fetchInvoiceNumber('Thomashuis Lisse', totalAmount, omschrijving);
 
     // Datums verzamelen en formatteren
     // We splitsen op '-' om tijdzone-issues te voorkomen (YYYY-MM-DD)
