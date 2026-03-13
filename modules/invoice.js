@@ -127,7 +127,7 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
     const displayMonth = getDisplayMonth(monthStr);
 
     // 2. Factuurnummer Ophalen (met dynamische omschrijving)
-    const omschrijving = `Muziekdagbesteding Casper Slabbers ${displayMonth} ${yearStr}`;
+    const omschrijving = `Muziekdagbesteding Casper ${displayMonth}`;
     const invoiceNumber = await fetchInvoiceNumber('Thomashuis Lisse', totalAmount, omschrijving);
 
     // Datums verzamelen en formatteren
@@ -148,7 +148,7 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
 
             { text: `Factuur nr: ${invoiceNumber}`, bold: true },
             { text: `Datum: ${new Date().toLocaleDateString('nl-NL')}` },
-            { text: `Betreft: Muziekdagbesteding Casper Slabbers ${displayMonth} ${yearStr}`, margin: [0, 0, 0, 20] },
+            { text: `Betreft: Muziekdagbesteding Casper ${displayMonth}`, margin: [0, 0, 0, 20] },
 
             {
                 table: {
@@ -162,7 +162,7 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
                             { text: 'Totaal', style: 'tableHeader' }
                         ],
                         [
-                            `Muziekdagbesteding Casper Slabbers ${displayMonth} ${yearStr}`,
+                            `Muziekdagbesteding Casper ${displayMonth}`,
                             days.toString(),
                             `€ ${rate.toFixed(2).replace('.', ',')}`,
                             `€ ${totalAmount.toFixed(2).replace('.', ',')}`
