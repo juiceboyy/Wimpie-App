@@ -1,5 +1,12 @@
 import { fetchInvoiceNumber } from './api.js';
 
+// Helper voor maandnamen
+const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
+function getDisplayMonth(monthStr) {
+    const mIndex = parseInt(monthStr, 10) - 1;
+    return (mIndex >= 0 && mIndex < 12) ? monthNames[mIndex] : monthStr;
+}
+
 export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     // 1. Filter & Aggregate
     const cordaanData = data.filter(d => d.organisatie && d.organisatie.toLowerCase().includes('cordaan'));
@@ -55,7 +62,9 @@ export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     ]);
 
     // 2. Factuurnummer Ophalen
-    const invoiceNumber = await fetchInvoiceNumber('Cordaan', grandTotal, `Muziekdagbesteding Cordaan ${monthStr}-${yearStr}`);
+    const displayMonth = getDisplayMonth(monthStr);
+    const omschrijving = `Muziekdagbesteding Cordaan ${displayMonth} ${yearStr}`;
+    const invoiceNumber = await fetchInvoiceNumber('Cordaan', grandTotal, omschrijving);
 
     // 3. PDF Definitie
     const docDefinition = {
@@ -68,7 +77,7 @@ export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
 
             { text: `Factuur nr: ${invoiceNumber}`, bold: true },
             { text: `Datum: ${new Date().toLocaleDateString('nl-NL')}` },
-            { text: `Betreft: Muziek Dagbesteding Wimpie & de Domino's in ${monthStr} '${yearStr.slice(-2)} - medewerkernummer 9125107`, margin: [0, 0, 0, 20] },
+            { text: `Betreft: Muziek Dagbesteding Wimpie & de Domino's in ${displayMonth} ${yearStr} - medewerkernummer 9125107`, margin: [0, 0, 0, 20] },
 
             {
                 table: {
@@ -115,9 +124,7 @@ export async function generateThomashuisInvoicePDF(data, monthStr, yearStr) {
     const totalAmount = days * rate;
 
     // Helper voor maandnaam
-    const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
-    const mIndex = parseInt(monthStr, 10) - 1;
-    const displayMonth = (mIndex >= 0 && mIndex < 12) ? monthNames[mIndex] : monthStr;
+    const displayMonth = getDisplayMonth(monthStr);
 
     // 2. Factuurnummer Ophalen (met dynamische omschrijving)
     const omschrijving = `Muziekdagbesteding Casper Slabbers ${displayMonth} ${yearStr}`;
