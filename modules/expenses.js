@@ -51,7 +51,7 @@ function renderExpenseUI(activeDays, totalAmount, maandInput) {
     const maandNamen = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
     const maandNaam = maandNamen[parseInt(maand, 10) - 1];
 
-    const bunqLink = `https://bunq.me/JouwBunqLink/${totalAmount}/Oefenruimte%20${maandNaam}`;
+    const bunqLink = `https://bunq.me/Wimpie/${totalAmount}/Oefenruimte%20${maandNaam}`;
 
     container.innerHTML = `
         <h3 class="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2"><i data-lucide="calculator" class="w-5 h-5"></i> Uitgaven / Oefenruimte</h3>
