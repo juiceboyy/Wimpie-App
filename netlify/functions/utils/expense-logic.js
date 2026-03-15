@@ -54,13 +54,15 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
     newBonNummer,         // Kolom B: Bonnummer (bv 2026.001)
     omschrijving,         // Kolom C: Omschrijving
     "RK Parochie Emmaus", // Kolom D: Leverancier
-    bedrag                // Kolom E: Totaalbedrag
+    bedrag,               // Kolom E: Totaalbedrag
+    '',                   // Kolom F: Lege string (BTW)
+    bedrag                // Kolom G: Totaalbedrag
   ];
 
   // 6. Schrijf de nieuwe bon weg via UPDATE (Sniper methode)
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${targetSheet}!A${nextRow}:E${nextRow}`,
+    range: `${targetSheet}!A${nextRow}:G${nextRow}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [rowData]
