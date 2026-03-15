@@ -50,18 +50,17 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const rowData = [
-    datum,              // Kolom A: Datum
-    newBonNummer,       // Kolom B: Bonnummer (bv 2026.001)
-    omschrijving,       // Kolom C: Omschrijving
-    bedrag,             // Kolom D: Totaalbedrag
-    '',                 // Kolom E: Lege kolom
-    bedrag              // Kolom F: Nog een keer hetzelfde bedrag
+    datum,                // Kolom A: Datum
+    newBonNummer,         // Kolom B: Bonnummer (bv 2026.001)
+    omschrijving,         // Kolom C: Omschrijving
+    "RK Parochie Emmaus", // Kolom D: Leverancier
+    bedrag                // Kolom E: Totaalbedrag
   ];
 
   // 6. Schrijf de nieuwe bon weg via UPDATE (Sniper methode)
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${targetSheet}!A${nextRow}:F${nextRow}`,
+    range: `${targetSheet}!A${nextRow}:E${nextRow}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [rowData]
