@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 const { auth } = require('./google');
 
-async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
+async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
   const spreadsheetId = '1ygzfQoR19DjWF4-pDYOmT3GT-DkQRNk52S5lBWFuVP0';
@@ -48,7 +48,7 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag) {
 
   // 5. Maak de nieuwe rij op met de 12-koloms indeling
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const omschrijving = "Muziekdagbesteding"; // Standaard omschrijving
+  const omschrijving = omschrijvingInput || "Muziekdagbesteding";
 
   const rowData = [
     datum,              // Kolom A: datum

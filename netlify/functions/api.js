@@ -1,4 +1,5 @@
 const { getNextInvoiceNumberAndLog } = require('./utils/invoice-logic');
+const { bookExpenseAndLog } = require('./utils/expense-logic');
 const { getAttendance, getReport, getReportHistory, getParticipants, getExportData, saveRegistration, saveReport } = require('./utils/sheet-logic');
 const { sendExport } = require('./utils/export-logic');
 
@@ -57,11 +58,19 @@ async function handlePost(payload) {
     case 'email_export': return jsonResponse(await sendExport(payload));
     case 'generate_invoice_number':
       try {
-        const invoiceNumber = await getNextInvoiceNumberAndLog(payload.organisatie, payload.bedrag);
+        const invoiceNumber = await getNextInvoiceNumberAndLog(payload.organisatie, payload.bedrag, payload.omschrijving);
         return jsonResponse({ success: true, invoiceNumber: invoiceNumber });
       } catch (error) {
         console.error("Fout bij ophalen factuurnummer:", error);
         return jsonResponse({ error: 'Kon factuurnummer niet genereren.' }, 500);
+      }
+    case 'book_expense':
+      try {
+        const bonnummer = await bookExpenseAndLog(payload.omschrijving, payload.bedrag);
+        return jsonResponse({ success: true, bonnummer: bonnummer });
+      } catch (error) {
+        console.error("Fout bij boeken uitgave:", error);
+        return jsonResponse({ error: 'Kon uitgave niet boeken.' }, 500);
       }
     default: throw new Error(`Onbekend type: ${payload.type}`);
   }
