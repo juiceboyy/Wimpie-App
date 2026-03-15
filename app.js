@@ -3,6 +3,7 @@ import { handleExportAction } from './modules/export.js';
 import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals } from './modules/ui.js';
 import * as State from './modules/state.js';
+import { calculateAndRenderExpenses } from './modules/expenses.js';
 
 // INIT
 function init() {
@@ -33,6 +34,7 @@ function exposeGlobals() {
     window.saveReport = saveReport;
     window.downloadExport = handleExport;
     window.togglePresence = togglePresence;
+    window.calculateExpenses = calculateAndRenderExpenses;
 }
 
 async function fetchParticipants() {
