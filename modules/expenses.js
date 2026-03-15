@@ -52,7 +52,7 @@ function renderExpenseUI(activeDays, totalAmount, maandInput) {
     const maandNaam = maandNamen[parseInt(maand, 10) - 1];
 
     const omschrijving = `Huur oefenruimte ${maandNaam} ${jaar}`;
-    const iban = "[NL17 INGB 0004 6400 97]";
+    const iban = "NL17 INGB 0004 6400 97";
     
     // EPC/SEPA QR-code string opbouwen voor mobiel bankieren apps
     const epcString = `BCD\n002\n1\nSCT\n\nRK Parochie Emmaus\n${iban}\nEUR${totalAmount.toFixed(2)}\n\n\n${omschrijving}`;
