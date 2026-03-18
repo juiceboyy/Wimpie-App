@@ -1,6 +1,6 @@
 import { generateAmstaExcel } from './amsta.js';
 import { generateCordaanExcel } from './cordaan.js';
-import { generateThomashuisInvoicePDF } from './invoice.js';
+import { generateThomashuisInvoicePDF } from './thomashuis.js';
 
 export async function handleExportAction(data, organization, month) {
     if (organization.toLowerCase() === 'cordaan') {
