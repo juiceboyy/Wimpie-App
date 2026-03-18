@@ -1,5 +1,5 @@
 import { fetchInvoiceNumber } from './api.js';
-import { getDisplayMonth } from './utils.js';
+import { getDisplayMonth, createInvoiceDocDefinition } from './utils.js';
 
 export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     // 1. Filter & Aggregate
@@ -110,40 +110,13 @@ export async function generateCordaanInvoicePDF(data, monthStr, yearStr) {
     const invoiceNumber = await fetchInvoiceNumber('Cordaan', grandTotal, omschrijving);
 
     // 3. PDF Definitie
-    const docDefinition = {
-        content: [
-            { text: "VOF Wimpie & de Domino's", style: 'header' },
-            { text: "Aletta Jacobsstraat 59\n1349 HB Almere\nBtw nr: NL867767819801\nKvK: 96802863\nTel: 06-28143815", margin: [0, 0, 0, 20] },
-            
-            { text: "Aan:", style: 'subheader' },
-            { text: "Stichting Cordaan\nt.a.v. de Financiële Administratie\nDe Ruyterkade 7\n1013AA Amsterdam", margin: [0, 0, 0, 20] },
-
-            { text: `Factuur nr: ${invoiceNumber}`, bold: true },
-            { text: `Datum: ${new Date().toLocaleDateString('nl-NL')}` },
-            { text: `Betreft: ${omschrijving} - medewerkernummer 9125107`, margin: [0, 0, 0, 20] },
-
-            {
-                table: {
-                    headerRows: 1,
-                    widths: ['*', 'auto', 'auto', 'auto'],
-                    body: tableBody
-                },
-                layout: 'lightHorizontalLines',
-                margin: [0, 0, 0, 40]
-            }
-        ],
-        footer: {
-            text: "Betalingswijze: per bank IBAN NL 81 BUNQ 2154 5934 53 tnv VOF Wimpie & de Domino's te Almere, ovv factuurnummer.\nZorgvrijstelling: deze prestatie is vrijgesteld van BTW.\nTe betalen binnen 30 dagen na ontvangst factuur.",
-            alignment: 'center',
-            fontSize: 10,
-            margin: [40, 0, 40, 0]
-        },
-        styles: {
-            header: { fontSize: 18, bold: true, margin: [0, 0, 0, 5] },
-            subheader: { fontSize: 12, bold: true, margin: [0, 0, 0, 2] },
-            tableHeader: { bold: true, fillColor: '#eeeeee' }
-        }
-    };
+    const docDefinition = createInvoiceDocDefinition({
+        invoiceNumber: invoiceNumber,
+        recipientText: "Stichting Cordaan\nt.a.v. de Financiële Administratie\nDe Ruyterkade 7\n1013AA Amsterdam",
+        betreftText: `${omschrijving} - medewerkernummer 9125107`,
+        tableBody: tableBody,
+        footerText: "Betalingswijze: per bank IBAN NL 81 BUNQ 2154 5934 53 tnv VOF Wimpie & de Domino's te Almere, ovv factuurnummer.\nZorgvrijstelling: deze prestatie is vrijgesteld van BTW.\nTe betalen binnen 30 dagen na ontvangst factuur."
+    });
 
     // 4. Genereren
     pdfMake.createPdf(docDefinition).download(`Factuur_${invoiceNumber}_Cordaan_${monthStr}_${yearStr}.pdf`);
