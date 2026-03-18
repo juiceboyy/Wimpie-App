@@ -209,3 +209,57 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
         };
     }
 }
+
+export function setupDynamicUI() {
+    // Taak 2 & 3: Verberg bestaande AMSTA Excel knop en voeg AMSTA PDF knop toe
+    const amstaExcelBtn = document.querySelector('button[onclick="downloadExport(\'amsta\')"]');
+    if (amstaExcelBtn) {
+        amstaExcelBtn.style.display = 'none'; // Verberg de oude
+        
+        // Maak de nieuwe AMSTA factuur knop
+        const newAmstaPdfBtn = document.createElement('button');
+        // Uniform Design Systeem: Paars
+        newAmstaPdfBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 font-semibold';
+        newAmstaPdfBtn.innerHTML = '<i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Genereer AMSTA Factuur (PDF)';
+        newAmstaPdfBtn.onclick = () => window.downloadExport('amsta-factuur');
+        
+        amstaExcelBtn.parentNode.insertBefore(newAmstaPdfBtn, amstaExcelBtn.nextSibling);
+    }
+
+    // 1. Cordaan (Oranje)
+    const cordaanBtn = document.querySelector('button[onclick="downloadExport(\'cordaan\')"]');
+    if (cordaanBtn) {
+        cordaanBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 font-semibold';
+        cordaanBtn.innerHTML = '<i data-lucide="file-spreadsheet" class="w-5 h-5 mr-3"></i> Genereer Cordaan Urendeclaratie (Excel)';
+    }
+
+    // 2. Thomashuis (Geel/Goud)
+    const thomashuisBtn = document.querySelector('button[onclick="downloadExport(\'thomashuis\')"]');
+    if (thomashuisBtn) {
+        thomashuisBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-yellow-50 border-yellow-200 text-yellow-700 hover:bg-yellow-100 font-semibold';
+        thomashuisBtn.innerHTML = '<i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Genereer Thomashuis Factuur (PDF)';
+    }
+
+    // 3. Oefenruimte (Blauw/Grijs - Slate)
+    const expenseBtn = document.getElementById('btn-calc-expenses');
+    if (expenseBtn) {
+        expenseBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold';
+        expenseBtn.innerHTML = '<i data-lucide="calculator" class="w-5 h-5 mr-3"></i> Bereken Huur Oefenruimte';
+    }
+    
+    // 4. Aanwezigheid Opslaan (Blauw)
+    const saveAttendanceBtn = document.getElementById('btn-save-attendance');
+    if (saveAttendanceBtn) {
+        saveAttendanceBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 font-semibold';
+        saveAttendanceBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan';
+    }
+
+    // 5. Verslag Versturen (Groen)
+    const saveReportBtn = document.getElementById('btn-save-report');
+    if (saveReportBtn) {
+        saveReportBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-green-50 border-green-200 text-green-700 hover:bg-green-100 font-semibold';
+        saveReportBtn.innerHTML = '<i data-lucide="send" class="w-5 h-5 mr-3"></i> Verslag Versturen';
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+}
