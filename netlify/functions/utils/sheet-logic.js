@@ -3,6 +3,7 @@ const { verstuurVerslagEmail } = require('./mailer');
 
 async function getAttendance(datum) {
   const rows = await getSheetData('Registraties!A:D');
+  
   return rows.slice(1)
     .filter(row => row[0] && row[0].startsWith(datum))
     .map(row => ({
@@ -41,7 +42,7 @@ async function getParticipants() {
 
 async function getExportData(maand) {
   if (!maand) throw new Error('Geen maand opgegeven voor export.');
-
+  
   const [registraties, deelnemers, legenda] = await Promise.all([
     getSheetData('Registraties!A:D'),
     getSheetData('Deelnemers!A:F'),
@@ -89,11 +90,11 @@ async function getExportData(maand) {
 }
 
 async function saveRegistration(payload) {
-  const range = 'Registraties!A:D';
-  const rows = await getSheetData(range);
-  
   const targetDate = payload.entries[0]?.datum;
   if (!targetDate) throw new Error("Geen datum gevonden in payload");
+
+  const range = 'Registraties!A:D';
+  const rows = await getSheetData(range);
 
   const filteredRows = rows.filter(row => row[0] !== targetDate);
   const newRows = payload.entries

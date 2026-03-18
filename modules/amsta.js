@@ -1,5 +1,5 @@
 import { sendExportEmail } from './api.js';
-import { renderExportPreview } from './ui.js';
+import { renderExportPreview } from './ui-export.js';
 
 export function generateAmstaExcel(data, month, filename) {
     // 1. Filteren op Amsta

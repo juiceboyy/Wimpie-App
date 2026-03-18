@@ -1,6 +1,6 @@
 import { sendExportEmail } from './api.js';
-import { renderExportPreview } from './ui.js';
-import { generateCordaanInvoicePDF } from './invoice.js';
+import { renderExportPreview } from './ui-export.js';
+import { generateCordaanInvoicePDF } from './cordaan-invoice.js';
 
 export function generateCordaanExcel(data, yearMonth) {
     // 1. Filteren op Cordaan

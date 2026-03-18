@@ -1,9 +1,10 @@
 import * as API from './modules/api.js';
 import { handleExportAction } from './modules/export.js';
 import { verifyAccess } from './modules/auth.js';
-import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals } from './modules/ui.js';
+import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI, setButtonState } from './modules/ui.js';
 import * as State from './modules/state.js';
 import { calculateAndRenderExpenses } from './modules/expenses.js';
+import { runSafe } from './modules/utils.js';
 
 // INIT
 function init() {
@@ -15,7 +16,9 @@ function init() {
     document.getElementById('presenceDate').valueAsDate = new Date();
     document.getElementById('reportDate').valueAsDate = new Date();
     lucide.createIcons();
+    setupDynamicUI();
     fetchParticipants();
+    validateAIBtn();
 }
 
 function setupEventListeners() {
@@ -25,6 +28,14 @@ function setupEventListeners() {
         loadReportHistory();
         loadExistingReport();
     });
+    document.getElementById('reportText').addEventListener('input', validateAIBtn);
+}
+
+function validateAIBtn() {
+    const naam = document.getElementById('reportParticipant').value;
+    const text = document.getElementById('reportText').value.trim();
+    const btn = document.getElementById('btn-ai-improve');
+    if (btn) btn.disabled = (naam === 'Selecteer...' || text.length === 0);
 }
 
 // Functies beschikbaar maken voor HTML onclick attributes
@@ -35,21 +46,25 @@ function exposeGlobals() {
     window.downloadExport = handleExport;
     window.togglePresence = togglePresence;
     window.calculateExpenses = calculateAndRenderExpenses;
+    window.improveReportWithAI = improveReportWithAI;
 }
 
 async function fetchParticipants() {
-    try {
-        const data = await API.fetchParticipants();
-        State.setParticipants(data);
-        renderParticipants(State.getParticipants(), State.getPresence());
-        fillSelect(State.getParticipants());
-        document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
-        loadAttendanceForDate();
-    } catch (e) {
-        console.error(e);
-        State.setParticipants([]);
-        document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
-    }
+    const data = await runSafe(
+        () => API.fetchParticipants(),
+        () => {
+            State.setParticipants([]);
+            document.getElementById('participantsList').innerHTML = '<div class="p-4 text-red-500">Kan data niet laden van de server.</div>';
+        }
+    );
+
+    if (!data) return;
+
+    State.setParticipants(data);
+    renderParticipants(State.getParticipants(), State.getPresence());
+    fillSelect(State.getParticipants());
+    document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
+    loadAttendanceForDate();
 }
 
 async function loadAttendanceForDate() {
@@ -59,12 +74,14 @@ async function loadAttendanceForDate() {
     document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
     renderParticipants(State.getParticipants(), State.getPresence());
 
-    const btn = document.getElementById('btn-save-attendance');
-    btn.innerText = "Gegevens ophalen...";
-    btn.disabled = true;
+    setButtonState('btn-save-attendance', 'loading', { text: 'Gegevens ophalen...', disabled: true });
 
-    try {
-        const historyData = await API.fetchAttendance(datum);
+    const historyData = await runSafe(
+        () => API.fetchAttendance(datum),
+        () => { /* Fout wordt stil gelogd in runSafe */ }
+    );
+
+    if (historyData) {
         const participants = State.getParticipants();
         historyData.forEach(entry => {
             const index = participants.findIndex(p => p.naam === entry.naam);
@@ -75,8 +92,9 @@ async function loadAttendanceForDate() {
             }
         });
         renderParticipants(State.getParticipants(), State.getPresence());
-    } catch (e) { console.error(e); }
-    finally { btn.innerText = "Opslaan"; btn.disabled = false; }
+    }
+
+    setButtonState('btn-save-attendance', 'default', { text: 'Opslaan', icon: 'save', disabled: false });
 }
 
 async function loadReportHistory() {
@@ -92,17 +110,18 @@ async function loadReportHistory() {
     list.innerHTML = '<span class="text-xs text-slate-400">Zoeken...</span>';
     container.classList.remove('hidden');
 
-    try {
-        const datums = await API.fetchReportHistory(naam);
-        list.innerHTML = '';
-        renderHistoryList(datums, (d) => {
-            document.getElementById('reportDate').value = d;
-            loadExistingReport();
-        });
-    } catch (e) {
-        console.error(e);
-        list.innerHTML = '<span class="text-xs text-red-400">Fout bij laden.</span>';
-    }
+    const datums = await runSafe(
+        () => API.fetchReportHistory(naam),
+        () => { list.innerHTML = '<span class="text-xs text-red-400">Fout bij laden.</span>'; }
+    );
+
+    if (!datums) return;
+
+    list.innerHTML = '';
+    renderHistoryList(datums, (d) => {
+        document.getElementById('reportDate').value = d;
+        loadExistingReport();
+    });
 }
 
 async function loadExistingReport() {
@@ -113,12 +132,14 @@ async function loadExistingReport() {
 
     updateReportView("", "Zoeken naar bestaand verslag...", true);
 
-    try {
-        const data = await API.fetchReport(datum, naam);
+    const data = await runSafe(
+        () => API.fetchReport(datum, naam),
+        () => updateReportView("", "Fout bij ophalen.", false)
+    );
+
+    if (data) {
         updateReportView(data.tekst, "Typ hier je verslag...", false);
-    } catch (e) {
-        console.error(e);
-        updateReportView("", "Fout bij ophalen.", false);
+        validateAIBtn();
     }
 }
 
@@ -136,14 +157,22 @@ async function saveAttendance() {
             entries.push({ datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja" });
         }
     });
-    const btn = document.getElementById('btn-save-attendance');
-    btn.innerText = "Bezig met bijwerken...";
+    setButtonState('btn-save-attendance', 'loading', { text: 'Bezig met bijwerken...', disabled: true });
 
     if (entries.length === 0) entries.push({ datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee" });
 
-    await API.postRegistration(entries);
-    btn.innerText = "Succesvol Bijgewerkt!";
-    setTimeout(() => { btn.innerText = "Opslaan"; }, 2000);
+    const result = await runSafe(
+        () => API.postRegistration(entries),
+        () => setButtonState('btn-save-attendance', 'error', { text: 'Fout bij opslaan', disabled: false })
+    );
+
+    if (result) {
+        setButtonState('btn-save-attendance', 'success', { text: 'Succesvol Bijgewerkt!' });
+    }
+    
+    setTimeout(() => { 
+        setButtonState('btn-save-attendance', 'default', { text: 'Opslaan', icon: 'save', disabled: false });
+    }, 2000);
 }
 
 async function saveReport() {
@@ -153,17 +182,60 @@ async function saveReport() {
 
     if (naam === 'Selecteer...' || !tekst) return alert("Vul alles in.");
 
-    const btn = document.getElementById('btn-save-report');
-    btn.innerText = "Versturen...";
+    setButtonState('btn-save-report', 'loading', { text: 'Versturen...', disabled: true });
 
-    try {
-        const result = await API.postReport({ datum, naam, tekst });
+    const result = await runSafe(
+        () => API.postReport({ datum, naam, tekst }),
+        (e) => {
+            alert("Fout bij opslaan: " + (e.message || e));
+            setButtonState('btn-save-report', 'error', { text: 'Fout bij opslaan', disabled: false });
+        }
+    );
+
+    if (result) {
         alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
-        btn.innerText = "Verslag Opgeslagen!";
-    } catch (e) {
-        alert("Fout bij opslaan: " + e);
+        setButtonState('btn-save-report', 'success', { text: 'Verslag Opgeslagen!' });
     }
-    setTimeout(() => btn.innerText = "Verslag Versturen", 2000);
+
+    setTimeout(() => { 
+        setButtonState('btn-save-report', 'default', { text: 'Verslag Versturen', icon: 'send', disabled: false });
+    }, 2000);
+}
+
+async function improveReportWithAI() {
+    const naam = document.getElementById('reportParticipant').value;
+    const steekwoorden = document.getElementById('reportText').value.trim();
+
+    if (naam === 'Selecteer...' || !steekwoorden) return;
+
+    setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+
+    const historyDates = await runSafe(() => API.fetchReportHistory(naam), () => []);
+    let historieText = "";
+    
+    if (historyDates && historyDates.length > 0) {
+        const currentDate = document.getElementById('reportDate').value;
+        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 3);
+        const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
+        historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
+    }
+
+    const result = await runSafe(
+        () => API.improveReportWithAI(naam, steekwoorden, historieText),
+        (e) => {
+            alert("Fout bij AI generatie: " + (e.message || e));
+            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        }
+    );
+
+    if (result && result.verbeterdVerslag) {
+        document.getElementById('reportText').value = result.verbeterdVerslag;
+        validateAIBtn(); // Valideer de nieuwe staat
+        setButtonState('btn-ai-improve', 'success', { text: 'Verbeterd!', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        setTimeout(() => {
+            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        }, 3000);
+    }
 }
 
 async function handleExport(organisatie) {
@@ -173,16 +245,12 @@ async function handleExport(organisatie) {
     const status = document.getElementById('exportStatus');
     status.classList.remove('hidden');
 
-    try {
+    await runSafe(async () => {
         const data = await API.fetchExport(maandInput);
         await handleExportAction(data, organisatie, maandInput);
+    });
 
-    } catch (e) {
-        console.error(e);
-        alert(e.message || "Fout bij ophalen van export data.");
-    } finally {
-        status.classList.add('hidden');
-    }
+    status.classList.add('hidden');
 }
 
 // Start de applicatie
