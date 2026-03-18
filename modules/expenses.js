@@ -1,6 +1,7 @@
 import * as API from './api.js';
 import { runSafe } from './utils.js';
-import { renderExpenseBlock, setButtonState } from './ui.js';
+import { setButtonState } from './ui.js';
+import { renderExpenseBlock } from './ui-expenses.js';
 
 export async function calculateAndRenderExpenses() {
     const maandInput = document.getElementById('exportMonth').value;

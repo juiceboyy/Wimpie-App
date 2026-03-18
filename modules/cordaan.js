@@ -1,5 +1,5 @@
 import { sendExportEmail } from './api.js';
-import { renderExportPreview } from './ui.js';
+import { renderExportPreview } from './ui-export.js';
 import { generateCordaanInvoicePDF } from './cordaan-invoice.js';
 
 export function generateCordaanExcel(data, yearMonth) {
