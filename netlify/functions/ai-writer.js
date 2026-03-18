@@ -21,8 +21,20 @@ exports.handler = async function(event, context) {
       return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Geen steekwoorden meegegeven.' }) };
     }
 
-    const prompt = `Je bent een professionele en empathische zorgverlener bij VOF Wimpie & de Domino's. Schrijf een beknopt dagverslag (maximaal 3-4 zinnen) in de ik-vorm.
+    const prompt = `Je bent een professionele en empathische zorgverlener bij VOF Wimpie & de Domino's. Schrijf een beknopt dagverslag (maximaal 3-4 zinnen) in de ik-vorm (waarbij jij de begeleider bent) over deelnemer ${naam}.
+
+Hier zijn twee voorbeelden van de gewenste schrijfstijl:
+
+Voorbeeld 1:
+Steekwoorden: gitaar, vrolijk, meezingen
+Verslag: Ik merkte dat ${naam} vandaag erg vrolijk binnenkwam op de dagbesteding. Tijdens de repetitie hebben we samen gitaar gespeeld en zong ${naam} enthousiast mee met de rest van de band. Ik vond het een erg muzikale en positieve middag!
+
+Voorbeeld 2:
+Steekwoorden: rustige start, luisteren, genieten
+Verslag: Vandaag zag ik dat ${naam} de dag wat rustig begon en vooral behoefte had aan ontspanning. ${naam} heeft heerlijk vanaf de zijlijn zitten luisteren naar de muziek en zichtbaar genoten van de sfeer. Later op de dag zag ik meer interactie en een mooie glimlach.
+
 Gebruik deze context van eerdere verslagen voor de juiste toon en continuïteit: ${historie || 'Geen eerdere verslagen.'}.
+
 Schrijf het nieuwe verslag op basis van deze steekwoorden: ${steekwoorden}.
 Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelijk vertegenwoordiger.`;
 
