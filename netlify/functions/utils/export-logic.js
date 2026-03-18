@@ -10,7 +10,7 @@ async function sendExport(payload) {
   let targetEmail = '';
   let orgNaam = '';
   if (payload.organisatie === 'amsta') {
-    targetEmail = 'crediteuren@amsta.nl'; // TODO: Vul echte AMSTA adres in
+    targetEmail = 'crediteuren@amsta.nl';
     orgNaam = 'AMSTA';
   } else {
     // Fallback / Standaard is Cordaan
@@ -18,9 +18,8 @@ async function sendExport(payload) {
     orgNaam = 'Cordaan';
   }
 
-  // TODO: TESTMODUS - Verander pas naar echte adressen als ALLES 100% is goedgekeurd!
-  const toEmail = targetEmail; // TODO: Verander dit later naar targetEmail
-  const ccEmail = 'auckboersma@gmail.com'; // TODO: Verander dit later naar 'auckboersma@gmail.com'
+  const toEmail = targetEmail;
+  const ccEmail = 'auckboersma@gmail.com';
 
   const subject = 'Declaratiebestand ' + payload.filename;
   let textBody = `Beste urenadministratie,\n\nIn de bijlage sturen wij het ingevulde uren-importbestand van Wimpie & de Domino's over de maand ${maandNaam} ${jaar}.\n\nHet betreft de geleverde muziekdagbesteding voor onze deelnemers via ${orgNaam}.`;
