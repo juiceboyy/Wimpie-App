@@ -43,11 +43,13 @@
             </div>
 
             <div id="participantsList" class="space-y-3">
-                <div class="text-center py-8 text-slate-400">Wachten op toegang...</div>
+                <div class="flex items-center justify-center py-8 text-slate-400">
+                    <i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-3"></i>
+                    <span class="text-sm font-medium">Deelnemers laden...</span>
+                </div>
             </div>
 
-            <button onclick="saveAttendance()" id="btn-save-attendance"
-                class="ios-btn w-full bg-blue-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-200">
+            <button onclick="saveAttendance()" id="btn-save-attendance">
                 Opslaan
             </button>
         </div>
@@ -83,8 +85,7 @@
                     </div>
                 </div>
             </div>
-            <button onclick="saveReport()" id="btn-save-report"
-                class="ios-btn w-full bg-green-600 text-white font-semibold py-4 rounded-xl shadow-lg shadow-green-200">
+            <button onclick="saveReport()" id="btn-save-report">
                 Verslag Versturen
             </button>
         </div>
@@ -104,28 +105,25 @@
                 </div>
 
                 <div class="space-y-3 pt-2">
-                    <button onclick="downloadExport('cordaan')"
-                        class="w-full flex items-center justify-between p-4 bg-orange-50 text-orange-700 rounded-xl border border-orange-200 hover:bg-orange-100 transition-colors">
-                        <span class="font-bold">Cordaan Export (.csv)</span>
-                        <i data-lucide="download" class="w-5 h-5"></i>
+                    <button onclick="downloadExport('cordaan')">
+                        Genereer Cordaan Urendeclaratie (Excel)
                     </button>
-                    <button onclick="downloadExport('amsta')"
-                        class="w-full flex items-center justify-between p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-200 hover:bg-purple-100 transition-colors">
-                        <span class="font-bold">Amsta Export (.csv)</span>
-                        <i data-lucide="download" class="w-5 h-5"></i>
+                    <button onclick="downloadExport('amsta')">
+                        Amsta Export (.csv)
                     </button>
-                    <button onclick="downloadExport('Thomashuis')"
-                        class="w-full flex items-center justify-between p-4 bg-yellow-50 text-yellow-700 rounded-xl border border-yellow-200 hover:bg-yellow-100 transition-colors">
-                        <span class="font-bold">Thomashuis Factuur (.pdf)</span>
-                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <button onclick="downloadExport('thomashuis')">
+                        Genereer Thomashuis Factuur (PDF)
                     </button>
-                    <button id="btn-calc-expenses" onclick="calculateExpenses()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded shadow-sm transition-colors text-slate-700 font-medium">
+                    <button id="btn-calc-expenses" onclick="calculateExpenses()">
                         Bereken Huur Oefenruimte
                     </button>
                 </div>
 
-                <div id="exportStatus" class="text-center text-sm font-medium text-slate-600 hidden">
-                    Gegevens ophalen...
+                <div id="exportStatus" class="hidden">
+                    <div class="flex items-center justify-center p-4 bg-blue-50 border-2 border-blue-200 rounded-lg text-blue-700 font-medium">
+                        <i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-3"></i>
+                        Gegevens ophalen en document genereren...
+                    </div>
                 </div>
             </div>
         </div>

@@ -56,6 +56,22 @@ function applyUniformButtonDesign() {
         expenseBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold';
         expenseBtn.innerHTML = '<i data-lucide="calculator" class="w-5 h-5 mr-3"></i> Bereken Huur Oefenruimte';
     }
+    
+    // 4. Aanwezigheid Opslaan (Blauw)
+    const saveAttendanceBtn = document.getElementById('btn-save-attendance');
+    if (saveAttendanceBtn) {
+        saveAttendanceBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 font-semibold';
+        saveAttendanceBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan';
+    }
+
+    // 5. Verslag Versturen (Groen)
+    const saveReportBtn = document.getElementById('btn-save-report');
+    if (saveReportBtn) {
+        saveReportBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-green-50 border-green-200 text-green-700 hover:bg-green-100 font-semibold';
+        saveReportBtn.innerHTML = '<i data-lucide="send" class="w-5 h-5 mr-3"></i> Verslag Versturen';
+    }
+
+    if (window.lucide) window.lucide.createIcons();
 }
 
 function setupEventListeners() {
@@ -100,7 +116,7 @@ async function loadAttendanceForDate() {
     renderParticipants(State.getParticipants(), State.getPresence());
 
     const btn = document.getElementById('btn-save-attendance');
-    btn.innerText = "Gegevens ophalen...";
+    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Gegevens ophalen...';
     btn.disabled = true;
 
     try {
@@ -116,7 +132,11 @@ async function loadAttendanceForDate() {
         });
         renderParticipants(State.getParticipants(), State.getPresence());
     } catch (e) { console.error(e); }
-    finally { btn.innerText = "Opslaan"; btn.disabled = false; }
+    finally { 
+        btn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan'; 
+        btn.disabled = false; 
+        if (window.lucide) window.lucide.createIcons();
+    }
 }
 
 async function loadReportHistory() {
@@ -177,13 +197,18 @@ async function saveAttendance() {
         }
     });
     const btn = document.getElementById('btn-save-attendance');
-    btn.innerText = "Bezig met bijwerken...";
+    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Bezig met bijwerken...';
 
     if (entries.length === 0) entries.push({ datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee" });
 
     await API.postRegistration(entries);
-    btn.innerText = "Succesvol Bijgewerkt!";
-    setTimeout(() => { btn.innerText = "Opslaan"; }, 2000);
+    btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 mr-3"></i> Succesvol Bijgewerkt!';
+    if (window.lucide) window.lucide.createIcons();
+    
+    setTimeout(() => { 
+        btn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan'; 
+        if (window.lucide) window.lucide.createIcons();
+    }, 2000);
 }
 
 async function saveReport() {
@@ -194,16 +219,23 @@ async function saveReport() {
     if (naam === 'Selecteer...' || !tekst) return alert("Vul alles in.");
 
     const btn = document.getElementById('btn-save-report');
-    btn.innerText = "Versturen...";
+    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Versturen...';
 
     try {
         const result = await API.postReport({ datum, naam, tekst });
         alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
-        btn.innerText = "Verslag Opgeslagen!";
+        btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 mr-3"></i> Verslag Opgeslagen!';
     } catch (e) {
         alert("Fout bij opslaan: " + e);
+        btn.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Fout bij opslaan';
     }
-    setTimeout(() => btn.innerText = "Verslag Versturen", 2000);
+
+    if (window.lucide) window.lucide.createIcons();
+    
+    setTimeout(() => { 
+        btn.innerHTML = '<i data-lucide="send" class="w-5 h-5 mr-3"></i> Verslag Versturen'; 
+        if (window.lucide) window.lucide.createIcons();
+    }, 2000);
 }
 
 async function handleExport(organisatie) {

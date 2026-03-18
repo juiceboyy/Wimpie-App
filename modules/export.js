@@ -23,26 +23,5 @@ export async function handleExportAction(data, organization, month) {
         return await generateAmstaInvoicePDF(data, monthStr, yearStr);
     }
 
-    const orgData = data.filter(d => String(d.organisatie).toLowerCase() === organization.toLowerCase());
-
-    if (orgData.length === 0) {
-        throw new Error(`Geen uren gevonden voor ${organization} in deze maand.`);
-    }
-
-    let csvContent = "";
-
-    if (organization === 'cordaan') {
-        // Fallback of oude logica verwijderd, wordt nu afgevangen door generateCordaanExcel
-    }
-
-    // Download triggeren
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Urenverantwoording_${organization}_${month}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    throw new Error(`Onbekende organisatie of export-actie: ${organization}`);
 }
