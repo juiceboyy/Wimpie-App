@@ -18,6 +18,7 @@ function init() {
     lucide.createIcons();
     setupDynamicUI();
     fetchParticipants();
+    validateAIBtn();
 }
 
 function setupEventListeners() {
@@ -27,6 +28,14 @@ function setupEventListeners() {
         loadReportHistory();
         loadExistingReport();
     });
+    document.getElementById('reportText').addEventListener('input', validateAIBtn);
+}
+
+function validateAIBtn() {
+    const naam = document.getElementById('reportParticipant').value;
+    const text = document.getElementById('reportText').value.trim();
+    const btn = document.getElementById('btn-ai-improve');
+    if (btn) btn.disabled = (naam === 'Selecteer...' || text.length === 0);
 }
 
 // Functies beschikbaar maken voor HTML onclick attributes
@@ -37,6 +46,7 @@ function exposeGlobals() {
     window.downloadExport = handleExport;
     window.togglePresence = togglePresence;
     window.calculateExpenses = calculateAndRenderExpenses;
+    window.improveReportWithAI = improveReportWithAI;
 }
 
 async function fetchParticipants() {
@@ -129,6 +139,7 @@ async function loadExistingReport() {
 
     if (data) {
         updateReportView(data.tekst, "Typ hier je verslag...", false);
+        validateAIBtn();
     }
 }
 
@@ -189,6 +200,42 @@ async function saveReport() {
     setTimeout(() => { 
         setButtonState('btn-save-report', 'default', { text: 'Verslag Versturen', icon: 'send', disabled: false });
     }, 2000);
+}
+
+async function improveReportWithAI() {
+    const naam = document.getElementById('reportParticipant').value;
+    const steekwoorden = document.getElementById('reportText').value.trim();
+
+    if (naam === 'Selecteer...' || !steekwoorden) return;
+
+    setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+
+    const historyDates = await runSafe(() => API.fetchReportHistory(naam), () => []);
+    let historieText = "";
+    
+    if (historyDates && historyDates.length > 0) {
+        const currentDate = document.getElementById('reportDate').value;
+        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 3);
+        const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
+        historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
+    }
+
+    const result = await runSafe(
+        () => API.improveReportWithAI(naam, steekwoorden, historieText),
+        (e) => {
+            alert("Fout bij AI generatie: " + (e.message || e));
+            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        }
+    );
+
+    if (result && result.verbeterdVerslag) {
+        document.getElementById('reportText').value = result.verbeterdVerslag;
+        validateAIBtn(); // Valideer de nieuwe staat
+        setButtonState('btn-ai-improve', 'success', { text: 'Verbeterd!', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        setTimeout(() => {
+            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+        }, 3000);
+    }
 }
 
 async function handleExport(organisatie) {

@@ -156,6 +156,13 @@ export function setupDynamicUI() {
         saveReportBtn.innerHTML = '<i data-lucide="send" class="w-5 h-5 mr-3"></i> Verslag Versturen';
     }
 
+    // 6. AI Verbetering (Paars)
+    const aiBtn = document.getElementById('btn-ai-improve');
+    if (aiBtn) {
+        aiBtn.className = 'mt-3 flex items-center justify-center p-3 w-full border-2 rounded-lg transition-all bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed';
+        aiBtn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> AI Verbetering';
+    }
+
     if (window.lucide) window.lucide.createIcons();
 }
 

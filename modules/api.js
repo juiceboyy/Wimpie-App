@@ -78,3 +78,15 @@ export async function bookExpense(omschrijving, bedrag) {
     if (result.error) throw new Error(result.error);
     return result;
 }
+
+export async function improveReportWithAI(naam, steekwoorden, historie) {
+    const response = await fetch('/.netlify/functions/ai-writer', {
+        method: 'POST',
+        body: JSON.stringify({ naam, steekwoorden, historie })
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Server error bij AI generatie');
+    }
+    return response.json();
+}
