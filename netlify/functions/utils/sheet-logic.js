@@ -1,19 +1,8 @@
 const { getSheetData, updateSheetData, appendSheetData, clearSheetData } = require('./google');
 const { verstuurVerslagEmail } = require('./mailer');
 
-// Helper voor historisch routeren van tabbladen gebaseerd op het jaar
-function getRegistratiesRange(dateString) {
-  if (!dateString) return 'Registraties!A:D';
-  const year = String(dateString).split('-')[0];
-  const currentYear = new Date().getFullYear().toString();
-  // Huidig jaar naar standaard tab, historisch naar bijv. "Registraties 2025"
-  return year === currentYear ? 'Registraties!A:D' : `Registraties ${year}!A:D`;
-}
-
 async function getAttendance(datum) {
-  const range = getRegistratiesRange(datum);
-  let rows = [];
-  try { rows = await getSheetData(range); } catch (e) { /* Negeer als historisch tabblad nog niet bestaat */ }
+  const rows = await getSheetData('Registraties!A:D');
   
   return rows.slice(1)
     .filter(row => row[0] && row[0].startsWith(datum))
@@ -54,11 +43,8 @@ async function getParticipants() {
 async function getExportData(maand) {
   if (!maand) throw new Error('Geen maand opgegeven voor export.');
   
-  const range = getRegistratiesRange(maand);
-  let registraties = [];
-  try { registraties = await getSheetData(range); } catch (e) { }
-
-  const [deelnemers, legenda] = await Promise.all([
+  const [registraties, deelnemers, legenda] = await Promise.all([
+    getSheetData('Registraties!A:D'),
     getSheetData('Deelnemers!A:F'),
     getSheetData('Legenda!A:B'),
   ]);
@@ -107,14 +93,8 @@ async function saveRegistration(payload) {
   const targetDate = payload.entries[0]?.datum;
   if (!targetDate) throw new Error("Geen datum gevonden in payload");
 
-  const range = getRegistratiesRange(targetDate);
-  let rows = [];
-  try { 
-    rows = await getSheetData(range); 
-  } catch(e) {
-    // Als het historische tabblad nog helemaal leeg/niet-bestaand is, begin met headers
-    rows = [['Datum', 'Naam', 'Dagdelen', 'Aanwezig']];
-  }
+  const range = 'Registraties!A:D';
+  const rows = await getSheetData(range);
 
   const filteredRows = rows.filter(row => row[0] !== targetDate);
   const newRows = payload.entries
@@ -134,7 +114,7 @@ async function saveRegistration(payload) {
     }
   }
 
-  try { await clearSheetData(range); } catch (e) { /* Negeer als sheet leeg is */ }
+  await clearSheetData(range);
   await updateSheetData(range, uniqueRows);
   return { message: "Opgeslagen" };
 }
