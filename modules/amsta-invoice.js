@@ -19,7 +19,8 @@ export async function generateAmstaInvoicePDF(data, monthStr, yearStr) {
                 naam: row.naam,
                 dagen: 0,
                 datums: new Set(),
-                tarief: parseFloat(cleanTarief) || 0
+                // Verdubbel het dagdeel-tarief uit de sheet naar een dagtarief
+                tarief: (parseFloat(cleanTarief) || 0) * 2
             };
         }
         participants[row.naam].dagen += 1;
