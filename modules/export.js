@@ -1,4 +1,5 @@
 import { generateAmstaExcel } from './amsta.js';
+import { generateAmstaInvoicePDF } from './amsta-invoice.js';
 import { generateCordaanExcel } from './cordaan.js';
 import { generateThomashuisInvoicePDF } from './thomashuis.js';
 
@@ -15,6 +16,11 @@ export async function handleExportAction(data, organization, month) {
     if (organization.toLowerCase() === 'amsta') {
         const filename = `Urenverantwoording_${organization}_${month}.xlsx`;
         return generateAmstaExcel(data, month, filename);
+    }
+
+    if (organization.toLowerCase() === 'amsta-factuur') {
+        const [yearStr, monthStr] = month.split('-');
+        return await generateAmstaInvoicePDF(data, monthStr, yearStr);
     }
 
     const orgData = data.filter(d => String(d.organisatie).toLowerCase() === organization.toLowerCase());

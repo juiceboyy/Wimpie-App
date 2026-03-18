@@ -16,6 +16,22 @@ function init() {
     document.getElementById('reportDate').valueAsDate = new Date();
     lucide.createIcons();
     fetchParticipants();
+
+    // Taak 2 & 3: Verberg bestaande AMSTA Excel knop en voeg AMSTA PDF knop toe
+    const amstaExcelBtn = document.querySelector('button[onclick="downloadExport(\'amsta\')"]');
+    if (amstaExcelBtn) {
+        amstaExcelBtn.style.display = 'none'; // Verberg de oude
+        
+        // Maak de nieuwe AMSTA factuur knop
+        const newAmstaPdfBtn = document.createElement('button');
+        // Gebruik bestaande styling maar maak hem blauw ter onderscheid
+        newAmstaPdfBtn.className = amstaExcelBtn.className.replace('bg-green-600', 'bg-blue-600').replace('hover:bg-green-700', 'hover:bg-blue-700');
+        newAmstaPdfBtn.innerHTML = '<i data-lucide="file-text" class="w-4 h-4 mr-2 inline"></i>Genereer AMSTA Factuur (PDF)';
+        newAmstaPdfBtn.onclick = () => window.downloadExport('amsta-factuur');
+        
+        amstaExcelBtn.parentNode.insertBefore(newAmstaPdfBtn, amstaExcelBtn.nextSibling);
+        if (window.lucide) window.lucide.createIcons();
+    }
 }
 
 function setupEventListeners() {
