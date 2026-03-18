@@ -1,3 +1,15 @@
+// Helper voor centrale foutafhandeling
+export async function runSafe(action, onError) {
+    try {
+        return await action();
+    } catch (e) {
+        console.error("Actie Mislukt:", e);
+        if (onError) onError(e);
+        else alert("Er ging iets mis: " + (e.message || e));
+        return null;
+    }
+}
+
 // Helper voor maandnamen
 const monthNames = ["januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus", "september", "oktober", "november", "december"];
 export function getDisplayMonth(monthStr) {

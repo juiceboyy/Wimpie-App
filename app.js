@@ -4,18 +4,7 @@ import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI } from './modules/ui.js';
 import * as State from './modules/state.js';
 import { calculateAndRenderExpenses } from './modules/expenses.js';
-
-// Helper voor centrale foutafhandeling
-async function runSafe(action, onError) {
-    try {
-        return await action();
-    } catch (e) {
-        console.error("Actie Mislukt:", e);
-        if (onError) onError(e);
-        else alert("Er ging iets mis: " + (e.message || e));
-        return null;
-    }
-}
+import { runSafe } from './modules/utils.js';
 
 // INIT
 function init() {
