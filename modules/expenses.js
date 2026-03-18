@@ -5,7 +5,7 @@ export async function calculateAndRenderExpenses() {
     if (!maandInput) return alert("Selecteer eerst een maand om de uitgaven te berekenen.");
 
     const btn = document.getElementById('btn-calc-expenses');
-    if (btn) btn.innerHTML = "Berekenen...";
+    if (btn) btn.innerHTML = `<span class="animate-spin mr-3">⏳</span> Berekenen...`;
 
     try {
         // Haal export data op (deze is in de backend al gefilterd op aanwezig = 'Ja')
@@ -27,7 +27,10 @@ export async function calculateAndRenderExpenses() {
         console.error(e);
         alert("Fout bij berekenen uitgaven: " + e.message);
     } finally {
-        if (btn) btn.innerHTML = "Bereken Huur Oefenruimte";
+        if (btn) {
+            btn.innerHTML = `<i data-lucide="calculator" class="w-5 h-5 mr-3"></i> Bereken Huur Oefenruimte`;
+            if (window.lucide) window.lucide.createIcons();
+        }
     }
 }
 
