@@ -1,7 +1,7 @@
 import * as API from './modules/api.js';
 import { handleExportAction } from './modules/export.js';
 import { verifyAccess } from './modules/auth.js';
-import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI } from './modules/ui.js';
+import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI, setButtonState } from './modules/ui.js';
 import * as State from './modules/state.js';
 import { calculateAndRenderExpenses } from './modules/expenses.js';
 import { runSafe } from './modules/utils.js';
@@ -64,9 +64,7 @@ async function loadAttendanceForDate() {
     document.querySelectorAll('[id^="dagdelen-"]').forEach(el => el.value = "2");
     renderParticipants(State.getParticipants(), State.getPresence());
 
-    const btn = document.getElementById('btn-save-attendance');
-    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Gegevens ophalen...';
-    btn.disabled = true;
+    setButtonState('btn-save-attendance', 'loading', { text: 'Gegevens ophalen...', disabled: true });
 
     const historyData = await runSafe(
         () => API.fetchAttendance(datum),
@@ -86,9 +84,7 @@ async function loadAttendanceForDate() {
         renderParticipants(State.getParticipants(), State.getPresence());
     }
 
-    btn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan'; 
-    btn.disabled = false; 
-    if (window.lucide) window.lucide.createIcons();
+    setButtonState('btn-save-attendance', 'default', { text: 'Opslaan', icon: 'save', disabled: false });
 }
 
 async function loadReportHistory() {
@@ -150,24 +146,21 @@ async function saveAttendance() {
             entries.push({ datum: datum, naam: p.naam, dagdelen: document.getElementById(`dagdelen-${index}`).value, aanwezig: "Ja" });
         }
     });
-    const btn = document.getElementById('btn-save-attendance');
-    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Bezig met bijwerken...';
+    setButtonState('btn-save-attendance', 'loading', { text: 'Bezig met bijwerken...', disabled: true });
 
     if (entries.length === 0) entries.push({ datum: datum, naam: "DELETE_SIGNAL", dagdelen: 0, aanwezig: "Nee" });
 
     const result = await runSafe(
         () => API.postRegistration(entries),
-        () => { btn.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Fout bij opslaan'; }
+        () => setButtonState('btn-save-attendance', 'error', { text: 'Fout bij opslaan', disabled: false })
     );
 
     if (result) {
-        btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 mr-3"></i> Succesvol Bijgewerkt!';
+        setButtonState('btn-save-attendance', 'success', { text: 'Succesvol Bijgewerkt!' });
     }
-    if (window.lucide) window.lucide.createIcons();
     
     setTimeout(() => { 
-        btn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan'; 
-        if (window.lucide) window.lucide.createIcons();
+        setButtonState('btn-save-attendance', 'default', { text: 'Opslaan', icon: 'save', disabled: false });
     }, 2000);
 }
 
@@ -178,27 +171,23 @@ async function saveReport() {
 
     if (naam === 'Selecteer...' || !tekst) return alert("Vul alles in.");
 
-    const btn = document.getElementById('btn-save-report');
-    btn.innerHTML = '<span class="animate-spin mr-3">⏳</span> Versturen...';
+    setButtonState('btn-save-report', 'loading', { text: 'Versturen...', disabled: true });
 
     const result = await runSafe(
         () => API.postReport({ datum, naam, tekst }),
         (e) => {
             alert("Fout bij opslaan: " + (e.message || e));
-            btn.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 mr-3"></i> Fout bij opslaan';
+            setButtonState('btn-save-report', 'error', { text: 'Fout bij opslaan', disabled: false });
         }
     );
 
     if (result) {
         alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
-        btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 mr-3"></i> Verslag Opgeslagen!';
+        setButtonState('btn-save-report', 'success', { text: 'Verslag Opgeslagen!' });
     }
 
-    if (window.lucide) window.lucide.createIcons();
-    
     setTimeout(() => { 
-        btn.innerHTML = '<i data-lucide="send" class="w-5 h-5 mr-3"></i> Verslag Versturen'; 
-        if (window.lucide) window.lucide.createIcons();
+        setButtonState('btn-save-report', 'default', { text: 'Verslag Versturen', icon: 'send', disabled: false });
     }, 2000);
 }
 

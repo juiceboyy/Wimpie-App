@@ -1,13 +1,12 @@
 import * as API from './api.js';
 import { runSafe } from './utils.js';
-import { renderExpenseBlock } from './ui.js';
+import { renderExpenseBlock, setButtonState } from './ui.js';
 
 export async function calculateAndRenderExpenses() {
     const maandInput = document.getElementById('exportMonth').value;
     if (!maandInput) return alert("Selecteer eerst een maand om de uitgaven te berekenen.");
 
-    const btn = document.getElementById('btn-calc-expenses');
-    if (btn) btn.innerHTML = `<span class="animate-spin mr-3">⏳</span> Berekenen...`;
+    setButtonState('btn-calc-expenses', 'loading', { text: 'Berekenen...', disabled: true });
 
     const data = await runSafe(
         () => API.fetchExport(maandInput),
@@ -46,8 +45,5 @@ export async function calculateAndRenderExpenses() {
     }
 
     // Wordt altijd uitgevoerd (werkte voorheen als "finally")
-    if (btn) {
-        btn.innerHTML = `<i data-lucide="calculator" class="w-5 h-5 mr-3"></i> Bereken Huur Oefenruimte`;
-        if (window.lucide) window.lucide.createIcons();
-    }
+    setButtonState('btn-calc-expenses', 'default', { text: 'Bereken Huur Oefenruimte', icon: 'calculator', disabled: false });
 }

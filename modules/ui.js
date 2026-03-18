@@ -177,8 +177,7 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
 
     document.getElementById('confirmExportBtn').onclick = async function() {
         const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="animate-spin mr-2">⏳</span> Bezig met uploaden en mailen...`;
+        setButtonState(btn, 'loading', { text: 'Bezig met uploaden en mailen...', disabled: true, spacing: 'mr-2', iconSize: 'w-4 h-4' });
         
         try {
             await onConfirmCallback();
@@ -187,24 +186,21 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
         } catch (e) {
             console.error(e);
             alert("Er ging iets mis: " + e.message);
-            btn.disabled = false;
-            btn.innerHTML = `Opnieuw proberen`;
+            setButtonState(btn, 'default', { text: 'Opnieuw proberen', disabled: false });
         }
     };
 
     if (onInvoiceCallback) {
         document.getElementById('invoiceExportBtn').onclick = async function() {
             const btn = this;
-            btn.disabled = true;
-            btn.innerHTML = `<span class="animate-spin mr-2">⏳</span> Genereren...`;
+            setButtonState(btn, 'loading', { text: 'Genereren...', disabled: true, spacing: 'mr-2', iconSize: 'w-4 h-4' });
             try {
                 await onInvoiceCallback();
-                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Gedownload`;
+                setButtonState(btn, 'success', { text: 'Gedownload', disabled: false, spacing: 'mr-2', iconSize: 'w-4 h-4' });
             } catch (e) {
                 console.error(e);
                 alert("Fout bij genereren factuur: " + e.message);
-                btn.innerHTML = `Opnieuw proberen`;
-                btn.disabled = false;
+                setButtonState(btn, 'default', { text: 'Opnieuw proberen', disabled: false });
             }
         };
     }
@@ -337,20 +333,44 @@ export function renderExpenseBlock({ activeDays, totalAmount, maandNaam, omschri
 
     document.getElementById('btn-book-expense').onclick = async function() {
         const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="animate-spin mr-2">⏳</span> Bezig met boeken...`;
+        setButtonState(btn, 'loading', { text: 'Bezig met boeken...', disabled: true, spacing: 'mr-2', iconSize: 'w-4 h-4' });
 
         const result = await onBookCallback();
 
         if (result) {
             alert(`Succes! Bon ${result.bonnummer} is geboekt in het Inkoop tabblad.`);
-            btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 mr-2"></i> Geboekt (Bon: ${result.bonnummer})`;
+            setButtonState(btn, 'success', { text: `Geboekt (Bon: ${result.bonnummer})`, disabled: false, spacing: 'mr-2', iconSize: 'w-4 h-4' });
             btn.classList.replace('bg-green-600', 'bg-slate-400');
             btn.classList.replace('hover:bg-green-700', 'hover:bg-slate-400');
         } else {
-            btn.disabled = false;
-            btn.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i> Probeer opnieuw`;
+            setButtonState(btn, 'error', { text: 'Probeer opnieuw', disabled: false, spacing: 'mr-2', iconSize: 'w-4 h-4' });
         }
-        if (window.lucide) window.lucide.createIcons();
     };
+}
+
+export function setButtonState(btnId, state, options = {}) {
+    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
+    if (!btn) return;
+
+    const { text, icon, disabled, iconSize = "w-5 h-5", spacing = "mr-3" } = options;
+
+    if (disabled !== undefined) {
+        btn.disabled = disabled;
+    }
+
+    if (state === 'loading') {
+        btn.innerHTML = `<span class="animate-spin ${spacing}">⏳</span> ${text || 'Laden...'}`;
+    } else if (state === 'success') {
+        btn.innerHTML = `<i data-lucide="check" class="${iconSize} ${spacing}"></i> ${text || 'Succes'}`;
+    } else if (state === 'error') {
+        btn.innerHTML = `<i data-lucide="alert-circle" class="${iconSize} ${spacing}"></i> ${text || 'Fout'}`;
+    } else {
+        if (icon) {
+            btn.innerHTML = `<i data-lucide="${icon}" class="${iconSize} ${spacing}"></i> ${text}`;
+        } else {
+            btn.innerHTML = text;
+        }
+    }
+
+    if (window.lucide) window.lucide.createIcons();
 }
