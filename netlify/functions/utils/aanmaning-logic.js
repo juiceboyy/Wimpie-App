@@ -15,13 +15,30 @@ const EMAIL_ADRESSEN = {
   'AMSTA': 'crediteuren@amsta.nl',
 };
 
-function parseDutchDate(dateStr) {
+const MAANDEN = { jan:0, feb:1, mrt:2, apr:3, mei:4, jun:5, jul:6, aug:7, sep:8, okt:9, nov:10, dec:11 };
+
+function parseDutchDate(dateStr, year) {
+  if (!dateStr) return null;
+
+  // Formaat: "15-feb", "4-mrt" (Google Sheets korte maandnaam)
+  const kortMatch = dateStr.match(/^(\d{1,2})-([a-z]{3})$/i);
+  if (kortMatch) {
+    const day = parseInt(kortMatch[1], 10);
+    const month = MAANDEN[kortMatch[2].toLowerCase()];
+    if (month === undefined) return null;
+    return new Date(year, month, day);
+  }
+
+  // Fallback: DD-MM-YYYY
   const parts = dateStr.split('-');
-  if (parts.length !== 3) return null;
-  const day = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const year = parseInt(parts[2], 10);
-  return new Date(year, month, day);
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const yr = parseInt(parts[2], 10);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(yr)) return new Date(yr, month, day);
+  }
+
+  return null;
 }
 
 function formatDutchDate(date) {
@@ -72,7 +89,8 @@ async function getOpenstaandeFacturen({ debug = false } = {}) {
 
       if (!datumStr || !factuurnummer || !klant_naam) return;
 
-      const factuurDatum = parseDutchDate(datumStr);
+      const jaar = factuurnummer.includes('.') ? parseInt(factuurnummer.split('.')[0], 10) : new Date().getFullYear();
+      const factuurDatum = parseDutchDate(datumStr, jaar);
       if (!factuurDatum) {
         console.error(`[aanmaning] Kon datum niet parsen: "${datumStr}" (rij ${rowIndex + 2}, Q${sheetIndex + 1} Verkoop)`);
         return;
