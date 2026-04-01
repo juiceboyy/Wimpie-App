@@ -4,6 +4,7 @@ import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI, setButtonState } from './modules/ui.js';
 import * as State from './modules/state.js';
 import { calculateAndRenderExpenses } from './modules/expenses.js';
+import { controleerAanmaningen } from './modules/aanmaning.js';
 import { runSafe } from './modules/utils.js';
 
 // INIT
@@ -46,6 +47,7 @@ function exposeGlobals() {
     window.downloadExport = handleExport;
     window.togglePresence = togglePresence;
     window.calculateExpenses = calculateAndRenderExpenses;
+    window.controleerAanmaningen = controleerAanmaningen;
     window.improveReportWithAI = improveReportWithAI;
 }
 

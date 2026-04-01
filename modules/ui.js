@@ -135,7 +135,14 @@ export function setupDynamicUI() {
         thomashuisBtn.innerHTML = '<i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Genereer Thomashuis Factuur (PDF)';
     }
 
-    // 3. Oefenruimte (Blauw/Grijs - Slate)
+    // 3. Aanmaningen (Rood)
+    const aanmaningBtn = document.getElementById('btn-controleer-aanmaningen');
+    if (aanmaningBtn) {
+        aanmaningBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-red-50 border-red-200 text-red-700 hover:bg-red-100 font-semibold';
+        aanmaningBtn.innerHTML = '<i data-lucide="bell-ring" class="w-5 h-5 mr-3"></i> Controleer aanmaningen';
+    }
+
+    // 4. Oefenruimte (Blauw/Grijs - Slate)
     const expenseBtn = document.getElementById('btn-calc-expenses');
     if (expenseBtn) {
         expenseBtn.className = 'flex items-center justify-start text-left p-4 w-full border-2 rounded-lg transition-all bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold';
