@@ -31,7 +31,7 @@ function formatDutchDate(date) {
   return `${day}-${month}-${year}`;
 }
 
-async function getOpenstaandeFacturen() {
+async function getOpenstaandeFacturen({ debug = false } = {}) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
 
@@ -42,25 +42,41 @@ async function getOpenstaandeFacturen() {
   today.setHours(0, 0, 0, 0);
 
   const resultaat = [];
+  const debugRijen = [];
   const valueRanges = response.data.valueRanges || [];
 
-  valueRanges.forEach(vr => {
+  valueRanges.forEach((vr, sheetIndex) => {
     const rows = vr.values || [];
     // Sla header-rij over
-    rows.slice(1).forEach(row => {
-      const betaald = row[10];
-      if (betaald !== undefined && betaald !== '') return; // al betaald
-
+    rows.slice(1).forEach((row, rowIndex) => {
       const datumStr = row[0];
       const factuurnummer = row[1];
-      const omschrijving = row[2];
       const klant_naam = row[3];
+      const betaald = row[10];
+
+      if (debug) {
+        debugRijen.push({
+          sheet: `Q${sheetIndex + 1} Verkoop`,
+          rij: rowIndex + 2,
+          datumRaw: datumStr,
+          factuurnummer: factuurnummer || '(leeg)',
+          klant: klant_naam || '(leeg)',
+          betaald: betaald !== undefined && betaald !== '' ? betaald : '(onbetaald)',
+        });
+      }
+
+      if (betaald !== undefined && betaald !== '') return; // al betaald
+
+      const omschrijving = row[2];
       const bedrag = row[4];
 
       if (!datumStr || !factuurnummer || !klant_naam) return;
 
       const factuurDatum = parseDutchDate(datumStr);
-      if (!factuurDatum) return;
+      if (!factuurDatum) {
+        console.error(`[aanmaning] Kon datum niet parsen: "${datumStr}" (rij ${rowIndex + 2}, Q${sheetIndex + 1} Verkoop)`);
+        return;
+      }
 
       const termijnDagen = BETALINGSTERMIJNEN[klant_naam] ?? 30;
       const vervalDatum = new Date(factuurDatum);
@@ -82,6 +98,7 @@ async function getOpenstaandeFacturen() {
     });
   });
 
+  if (debug) return { debugRijen };
   return resultaat;
 }
 

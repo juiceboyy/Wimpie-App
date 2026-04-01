@@ -47,6 +47,7 @@ async function handleGet(params) {
     case 'verslag_historie': return jsonResponse(await getReportHistory(naam));
     case 'export': return jsonResponse(await getExportData(maand));
     case 'aanmaningen': return jsonResponse(await getOpenstaandeFacturen());
+    case 'aanmaningen_debug': return jsonResponse(await getOpenstaandeFacturen({ debug: true }));
     default: return jsonResponse(await getParticipants());
   }
 }
