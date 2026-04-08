@@ -17,7 +17,8 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
     // Tabel rijen genereren
     const rowsHtml = excelRows.map(row => {
         // Check voor subtotaal of lege rij voor styling
-        const isSubtotal = row['Naam'] && String(row['Naam']).startsWith('Subtotaal');
+        const rowNaam = row['Naam'] ? String(row['Naam']) : '';
+        const isSubtotal = rowNaam.startsWith('Subtotaal') || rowNaam.startsWith('--- VERVOER') || rowNaam === 'EINDTOTAAL';
         const isEmpty = Object.keys(row).length === 0;
         const bgClass = isSubtotal ? 'bg-slate-100 font-bold' : (isEmpty ? 'bg-white' : 'bg-white');
         
