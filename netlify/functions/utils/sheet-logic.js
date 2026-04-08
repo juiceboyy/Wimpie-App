@@ -87,6 +87,7 @@ async function getExportData(maand) {
         tarief: info.tarief || '',
         vervoerTarief: info.vervoerTarief || 0,
         activiteit_omschrijving: legendaMap[code] || code,
+        vervoerOmschrijving: legendaMap['V'] || 'Vervoer',
       };
     });
 }
