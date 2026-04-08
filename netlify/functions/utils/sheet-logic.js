@@ -28,9 +28,9 @@ async function getReportHistory(naam) {
 }
 
 async function getParticipants() {
-  const rows = await getSheetData('Deelnemers!A:F');
+  const rows = await getSheetData('Deelnemers!A:G');
   return rows.slice(1)
-    .filter(row => row[5] === 'Ja')
+    .filter(row => row[6] === 'Ja')
     .map(row => ({
       naam: row[0],
       organisatie: row[1],
@@ -133,10 +133,10 @@ async function saveReport(payload) {
   }
 
   try {
-    const deelnemersRows = await getSheetData('Deelnemers!A:G');
+    const deelnemersRows = await getSheetData('Deelnemers!A:H');
     const deelnemer = deelnemersRows.find(row => row[0] === payload.naam);
-    if (deelnemer && deelnemer[6] && deelnemer[6].includes('@')) {
-      await verstuurVerslagEmail(payload.naam, payload.datum, payload.tekst, deelnemer[6]);
+    if (deelnemer && deelnemer[7] && deelnemer[7].includes('@')) {
+      await verstuurVerslagEmail(payload.naam, payload.datum, payload.tekst, deelnemer[7]);
     }
   } catch (mailError) {
     console.error('Mail error:', mailError);
