@@ -115,7 +115,24 @@ export function generateCordaanExcel(data, yearMonth) {
         }
     }
 
-    // 3c. Eindtotaal
+    // 3c. Subtotaal Vervoer
+    if (vervoerRijen.length > 0) {
+        excelRows.push({
+            "Naam": "Subtotaal Vervoer",
+            "BSN": "",
+            "Medewerkernummer": "",
+            "Activiteit": "",
+            "Begindatum": "",
+            "Minuten": "",
+            "Dagdelen": "",
+            "VG": "",
+            "Tarief": "",
+            "Bedrag": totaalVervoerBedrag
+        });
+        excelRows.push({});
+    }
+
+    // 3d. Eindtotaal
     excelRows.push({});
     excelRows.push({
         "Naam": "EINDTOTAAL",
