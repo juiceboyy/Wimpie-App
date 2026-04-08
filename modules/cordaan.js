@@ -106,8 +106,8 @@ export function generateCordaanExcel(data, yearMonth) {
                 "Medewerkernummer": "9125107",
                 "Activiteit": "Vervoer",
                 "Begindatum": formattedDate,
-                "Minuten": 0,
-                "Dagdelen": 1,
+                "Minuten": "",
+                "Dagdelen": "",
                 "VG": "",
                 "Tarief": tarief,
                 "Bedrag": tarief
