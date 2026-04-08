@@ -94,24 +94,49 @@ export function generateCordaanExcel(data, yearMonth) {
     if (vervoerRijen.length > 0) {
         excelRows.push({ "Naam": "--- VERVOER ---" });
 
-        for (const row of vervoerRijen) {
+        let subVervoerMinuten = 0;
+        let subVervoerBedrag = 0;
+
+        for (let i = 0; i < vervoerRijen.length; i++) {
+            const row = vervoerRijen[i];
             const [y, m, d] = row.datum.split('-');
             const formattedDate = `${parseInt(d)}-${parseInt(m)}-${y}`;
             const tarief = row.vervoerTarief;
             totaalVervoerBedrag += tarief;
+            subVervoerMinuten += 1;
+            subVervoerBedrag += tarief;
 
             excelRows.push({
                 "Naam": row.naam,
                 "BSN": row.bsn,
                 "Medewerkernummer": "9125107",
-                "Activiteit": "Vervoer",
+                "Activiteit": row.vervoerOmschrijving,
                 "Begindatum": formattedDate,
-                "Minuten": "",
+                "Minuten": 1,
                 "Dagdelen": "",
                 "VG": "",
                 "Tarief": tarief,
                 "Bedrag": tarief
             });
+
+            const nextRow = vervoerRijen[i + 1];
+            if (!nextRow || nextRow.naam !== row.naam) {
+                excelRows.push({
+                    "Naam": "Subtotaal " + row.naam,
+                    "BSN": "",
+                    "Medewerkernummer": "",
+                    "Activiteit": "",
+                    "Begindatum": "",
+                    "Minuten": subVervoerMinuten,
+                    "Dagdelen": "",
+                    "VG": "",
+                    "Tarief": "",
+                    "Bedrag": subVervoerBedrag
+                });
+                excelRows.push({});
+                subVervoerMinuten = 0;
+                subVervoerBedrag = 0;
+            }
         }
     }
 
