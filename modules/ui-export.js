@@ -1,6 +1,6 @@
 import { setButtonState } from './ui.js';
 
-export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCallback, onInvoiceCallback) {
+export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCallback, onInvoiceCallback, onDownloadCallback) {
     // Bestaande modal verwijderen indien aanwezig
     const existingModal = document.getElementById('exportModal');
     if (existingModal) existingModal.remove();
@@ -17,7 +17,8 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
     // Tabel rijen genereren
     const rowsHtml = excelRows.map(row => {
         // Check voor subtotaal of lege rij voor styling
-        const isSubtotal = row['Naam'] && String(row['Naam']).startsWith('Subtotaal');
+        const rowNaam = row['Naam'] ? String(row['Naam']) : '';
+        const isSubtotal = rowNaam.startsWith('Subtotaal') || rowNaam.startsWith('--- VERVOER') || rowNaam === 'EINDTOTAAL';
         const isEmpty = Object.keys(row).length === 0;
         const bgClass = isSubtotal ? 'bg-slate-100 font-bold' : (isEmpty ? 'bg-white' : 'bg-white');
         
@@ -53,6 +54,7 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
 
             <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
                 <button id="cancelExportBtn" class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded transition-colors">Annuleren</button>
+                ${onDownloadCallback ? `<button id="downloadExportBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded shadow transition-colors flex items-center gap-2"><i data-lucide="download" class="w-4 h-4"></i> Download</button>` : ''}
                 ${onInvoiceCallback ? `<button id="invoiceExportBtn" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded shadow transition-colors flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> Factuur (PDF)</button>` : ''}
                 <button id="confirmExportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow transition-colors flex items-center gap-2">
                     <i data-lucide="send" class="w-4 h-4"></i>
@@ -69,6 +71,10 @@ export function renderExportPreview(excelRows, filename, yearMonth, onConfirmCal
     const close = () => modal.remove();
     document.getElementById('closeExportModal').onclick = close;
     document.getElementById('cancelExportBtn').onclick = close;
+
+    if (onDownloadCallback) {
+        document.getElementById('downloadExportBtn').onclick = () => onDownloadCallback();
+    }
 
     document.getElementById('confirmExportBtn').onclick = async function() {
         const btn = this;

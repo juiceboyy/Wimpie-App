@@ -79,6 +79,22 @@ export async function bookExpense(omschrijving, bedrag) {
     return result;
 }
 
+export async function fetchAanmaningen() {
+    const response = await fetch(`${SCRIPT_URL}?type=aanmaningen`);
+    if (!response.ok) throw new Error('API gaf een error: ' + response.status);
+    return response.json();
+}
+
+export async function postStuurAanmaning(payload) {
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ ...payload, type: 'stuur_aanmaning' })
+    });
+    const result = await response.json();
+    if (result.error) throw new Error(result.error);
+    return result;
+}
+
 export async function improveReportWithAI(naam, steekwoorden, historie) {
     const response = await fetch('/.netlify/functions/ai-writer', {
         method: 'POST',

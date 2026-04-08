@@ -22,6 +22,7 @@ export function generateCordaanExcel(data, yearMonth) {
     let subMinuten = 0;
     let subDagdelen = 0;
     let subBedrag = 0;
+    let totaalUrenBedrag = 0;
 
     for (let i = 0; i < cordaanData.length; i++) {
         const row = cordaanData[i];
@@ -76,12 +77,75 @@ export function generateCordaanExcel(data, yearMonth) {
             // Lege regel toevoegen voor leesbaarheid
             excelRows.push({});
 
+            // Totaal uren bedrag bijhouden
+            totaalUrenBedrag += subBedrag;
+
             // Reset tellers
             subMinuten = 0;
             subDagdelen = 0;
             subBedrag = 0;
         }
     }
+
+    // 3b. Vervoerskosten blok (één rij per aanwezige dag, zelfde opmaak als uren)
+    const vervoerRijen = cordaanData.filter(row => row.vervoerTarief > 0);
+    let totaalVervoerBedrag = 0;
+
+    if (vervoerRijen.length > 0) {
+        excelRows.push({ "Naam": "--- VERVOER ---" });
+
+        for (const row of vervoerRijen) {
+            const [y, m, d] = row.datum.split('-');
+            const formattedDate = `${parseInt(d)}-${parseInt(m)}-${y}`;
+            const tarief = row.vervoerTarief;
+            totaalVervoerBedrag += tarief;
+
+            excelRows.push({
+                "Naam": row.naam,
+                "BSN": row.bsn,
+                "Medewerkernummer": "9125107",
+                "Activiteit": "Vervoer",
+                "Begindatum": formattedDate,
+                "Minuten": "",
+                "Dagdelen": "",
+                "VG": "",
+                "Tarief": tarief,
+                "Bedrag": tarief
+            });
+        }
+    }
+
+    // 3c. Subtotaal Vervoer
+    if (vervoerRijen.length > 0) {
+        excelRows.push({
+            "Naam": "Subtotaal Vervoer",
+            "BSN": "",
+            "Medewerkernummer": "",
+            "Activiteit": "",
+            "Begindatum": "",
+            "Minuten": "",
+            "Dagdelen": "",
+            "VG": "",
+            "Tarief": "",
+            "Bedrag": totaalVervoerBedrag
+        });
+        excelRows.push({});
+    }
+
+    // 3d. Eindtotaal
+    excelRows.push({});
+    excelRows.push({
+        "Naam": "EINDTOTAAL",
+        "BSN": "",
+        "Medewerkernummer": "",
+        "Activiteit": "",
+        "Begindatum": "",
+        "Minuten": "",
+        "Dagdelen": "",
+        "VG": "",
+        "Tarief": "",
+        "Bedrag": totaalUrenBedrag + totaalVervoerBedrag
+    });
 
     // 4. Bestandsnaam genereren
     const [yearStr, monthStr] = yearMonth.split('-');
@@ -94,11 +158,8 @@ export function generateCordaanExcel(data, yearMonth) {
     const shortYear = yearStr.slice(2);
     const filename = `${shortYear}${monthStr}${lastDay} - Controlebestand Wimpie&Domino's - ${monthNames[monthIndex]} '${shortYear}.xlsx`;
 
-    // 5. Preview tonen in plaats van direct downloaden
-    renderExportPreview(excelRows, filename, yearMonth, 
-    // Confirm Callback (Email)
-    async () => {
-        // 6. Excel Generatie (Pas bij bevestiging)
+    // 5. Workbook bouwen (gedeeld door download en e-mail)
+    function buildWorkbook() {
         const ws = XLSX.utils.json_to_sheet(excelRows);
 
         // Kolombreedtes automatisch aanpassen
@@ -116,7 +177,6 @@ export function generateCordaanExcel(data, yearMonth) {
                 });
             });
 
-            // Extra padding toevoegen
             wscols.forEach(c => c.wch += 2);
             ws['!cols'] = wscols;
         }
@@ -128,20 +188,19 @@ export function generateCordaanExcel(data, yearMonth) {
                 const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
                 const cell = ws[firstCellRef];
                 const isHeader = (R === 0);
-                const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
+                const cellVal = cell && cell.v ? String(cell.v) : '';
+                const isSubtotal = cellVal.startsWith('Subtotaal') || cellVal.startsWith('--- VERVOER') || cellVal === 'EINDTOTAAL';
 
                 for (let C = range.s.c; C <= range.e.c; ++C) {
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
                     if (!ws[cellRef]) continue;
 
-                    // 1. Styling (Headers & Subtotalen)
                     if (isHeader || isSubtotal) {
                         if (!ws[cellRef].s) ws[cellRef].s = {};
                         ws[cellRef].s.font = { bold: true };
                         ws[cellRef].s.fill = { fgColor: { rgb: isHeader ? "D9D9D9" : "F2F2F2" } };
                     }
 
-                    // 2. Valuta Formattering (Kolom 8=Tarief, 9=Bedrag) - Niet op header
                     if (!isHeader && (C === 8 || C === 9)) {
                         ws[cellRef].z = '"€ "#,##0.00';
                     }
@@ -151,15 +210,24 @@ export function generateCordaanExcel(data, yearMonth) {
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Blad1");
-        
-        // Geen lokale download meer (XLSX.writeFile verwijderd)
+        return wb;
+    }
 
-        // Email versturen naar backend
+    // 6. Preview tonen
+    renderExportPreview(excelRows, filename, yearMonth,
+    // Confirm Callback (Email)
+    async () => {
+        const wb = buildWorkbook();
         const base64Data = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
         await sendExportEmail({ filename, base64Data, maand: yearMonth, organisatie: 'cordaan' });
-    }, 
+    },
     // Invoice Callback (PDF)
     async () => {
         await generateCordaanInvoicePDF(data, monthStr, yearStr);
+    },
+    // Download Callback (lokaal opslaan)
+    () => {
+        const wb = buildWorkbook();
+        XLSX.writeFile(wb, filename);
     });
 }

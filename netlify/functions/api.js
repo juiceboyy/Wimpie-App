@@ -2,6 +2,7 @@ const { getNextInvoiceNumberAndLog } = require('./utils/invoice-logic');
 const { bookExpenseAndLog } = require('./utils/expense-logic');
 const { getAttendance, getReport, getReportHistory, getParticipants, getExportData, saveRegistration, saveReport } = require('./utils/sheet-logic');
 const { sendExport } = require('./utils/export-logic');
+const { getOpenstaandeFacturen, stuurAanmaning } = require('./utils/aanmaning-logic');
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -45,6 +46,8 @@ async function handleGet(params) {
     case 'verslag': return jsonResponse(await getReport(datum, naam));
     case 'verslag_historie': return jsonResponse(await getReportHistory(naam));
     case 'export': return jsonResponse(await getExportData(maand));
+    case 'aanmaningen': return jsonResponse(await getOpenstaandeFacturen());
+    case 'aanmaningen_debug': return jsonResponse(await getOpenstaandeFacturen({ debug: true }));
     default: return jsonResponse(await getParticipants());
   }
 }
@@ -71,6 +74,13 @@ async function handlePost(payload) {
       } catch (error) {
         console.error("Fout bij boeken uitgave:", error);
         return jsonResponse({ error: 'Kon uitgave niet boeken.' }, 500);
+      }
+    case 'stuur_aanmaning':
+      try {
+        return jsonResponse(await stuurAanmaning(payload));
+      } catch (error) {
+        console.error("Fout bij versturen aanmaning:", error);
+        return jsonResponse({ error: error.message }, 500);
       }
     default: throw new Error(`Onbekend type: ${payload.type}`);
   }

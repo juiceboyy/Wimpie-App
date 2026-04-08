@@ -62,6 +62,7 @@ async function getExportData(maand) {
         bsn: row[2] || '',
         code: row[3] || '',
         tarief: row[4] || '',
+        vervoerTarief: parseFloat(String(row[5] || '').replace(',', '.')) || 0,
       };
     }
   });
@@ -84,6 +85,7 @@ async function getExportData(maand) {
         bsn: info.bsn || '',
         code: code,
         tarief: info.tarief || '',
+        vervoerTarief: info.vervoerTarief || 0,
         activiteit_omschrijving: legendaMap[code] || code,
       };
     });
