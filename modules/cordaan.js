@@ -102,7 +102,7 @@ export function generateCordaanExcel(data, yearMonth) {
     const vervoerEntries = Object.entries(vervoerPerPersoon);
 
     if (vervoerEntries.length > 0) {
-        excelRows.push({ "Naam": "--- VERVOER ---" });
+        excelRows.push({ "Naam": "--- VERVOER ---", "Dagdelen": "Dagen" });
 
         for (const [naam, { tarief, dagen }] of vervoerEntries) {
             const aantalDagen = dagen.size;
