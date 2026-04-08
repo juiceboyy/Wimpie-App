@@ -22,6 +22,7 @@ export function generateCordaanExcel(data, yearMonth) {
     let subMinuten = 0;
     let subDagdelen = 0;
     let subBedrag = 0;
+    let totaalUrenBedrag = 0;
 
     for (let i = 0; i < cordaanData.length; i++) {
         const row = cordaanData[i];
@@ -76,12 +77,67 @@ export function generateCordaanExcel(data, yearMonth) {
             // Lege regel toevoegen voor leesbaarheid
             excelRows.push({});
 
+            // Totaal uren bedrag bijhouden
+            totaalUrenBedrag += subBedrag;
+
             // Reset tellers
             subMinuten = 0;
             subDagdelen = 0;
             subBedrag = 0;
         }
     }
+
+    // 3b. Vervoerskosten blok
+    const vervoerPerPersoon = {};
+    cordaanData.forEach(row => {
+        if (row.vervoerTarief > 0) {
+            if (!vervoerPerPersoon[row.naam]) {
+                vervoerPerPersoon[row.naam] = { tarief: row.vervoerTarief, dagen: new Set() };
+            }
+            vervoerPerPersoon[row.naam].dagen.add(row.datum);
+        }
+    });
+
+    let totaalVervoerBedrag = 0;
+    const vervoerEntries = Object.entries(vervoerPerPersoon);
+
+    if (vervoerEntries.length > 0) {
+        excelRows.push({ "Naam": "--- VERVOER ---" });
+
+        for (const [naam, { tarief, dagen }] of vervoerEntries) {
+            const aantalDagen = dagen.size;
+            const bedrag = aantalDagen * tarief;
+            totaalVervoerBedrag += bedrag;
+
+            excelRows.push({
+                "Naam": naam,
+                "BSN": "",
+                "Medewerkernummer": "",
+                "Activiteit": "Vervoer",
+                "Begindatum": "",
+                "Minuten": "",
+                "Dagdelen": aantalDagen,
+                "VG": "",
+                "Tarief": tarief,
+                "Bedrag": bedrag
+            });
+        }
+    }
+
+    // 3c. Eindtotaal
+    excelRows.push({});
+    excelRows.push({
+        "Naam": "EINDTOTAAL",
+        "BSN": "",
+        "Medewerkernummer": "",
+        "Activiteit": "",
+        "Begindatum": "",
+        "Minuten": "",
+        "Dagdelen": "",
+        "VG": "",
+        "Tarief": "",
+        "Bedrag": totaalUrenBedrag + totaalVervoerBedrag
+    });
 
     // 4. Bestandsnaam genereren
     const [yearStr, monthStr] = yearMonth.split('-');
@@ -128,7 +184,8 @@ export function generateCordaanExcel(data, yearMonth) {
                 const firstCellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
                 const cell = ws[firstCellRef];
                 const isHeader = (R === 0);
-                const isSubtotal = (cell && cell.v && String(cell.v).startsWith('Subtotaal'));
+                const cellVal = cell && cell.v ? String(cell.v) : '';
+                const isSubtotal = cellVal.startsWith('Subtotaal') || cellVal.startsWith('--- VERVOER') || cellVal === 'EINDTOTAAL';
 
                 for (let C = range.s.c; C <= range.e.c; ++C) {
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
