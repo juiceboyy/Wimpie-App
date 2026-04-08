@@ -87,39 +87,30 @@ export function generateCordaanExcel(data, yearMonth) {
         }
     }
 
-    // 3b. Vervoerskosten blok
-    const vervoerPerPersoon = {};
-    cordaanData.forEach(row => {
-        if (row.vervoerTarief > 0) {
-            if (!vervoerPerPersoon[row.naam]) {
-                vervoerPerPersoon[row.naam] = { tarief: row.vervoerTarief, dagen: new Set() };
-            }
-            vervoerPerPersoon[row.naam].dagen.add(row.datum);
-        }
-    });
-
+    // 3b. Vervoerskosten blok (één rij per aanwezige dag, zelfde opmaak als uren)
+    const vervoerRijen = cordaanData.filter(row => row.vervoerTarief > 0);
     let totaalVervoerBedrag = 0;
-    const vervoerEntries = Object.entries(vervoerPerPersoon);
 
-    if (vervoerEntries.length > 0) {
-        excelRows.push({ "Naam": "--- VERVOER ---", "Dagdelen": "Dagen" });
+    if (vervoerRijen.length > 0) {
+        excelRows.push({ "Naam": "--- VERVOER ---" });
 
-        for (const [naam, { tarief, dagen }] of vervoerEntries) {
-            const aantalDagen = dagen.size;
-            const bedrag = aantalDagen * tarief;
-            totaalVervoerBedrag += bedrag;
+        for (const row of vervoerRijen) {
+            const [y, m, d] = row.datum.split('-');
+            const formattedDate = `${parseInt(d)}-${parseInt(m)}-${y}`;
+            const tarief = row.vervoerTarief;
+            totaalVervoerBedrag += tarief;
 
             excelRows.push({
-                "Naam": naam,
-                "BSN": "",
-                "Medewerkernummer": "",
+                "Naam": row.naam,
+                "BSN": row.bsn,
+                "Medewerkernummer": "9125107",
                 "Activiteit": "Vervoer",
-                "Begindatum": "",
-                "Minuten": "",
-                "Dagdelen": aantalDagen,
+                "Begindatum": formattedDate,
+                "Minuten": 0,
+                "Dagdelen": 1,
                 "VG": "",
                 "Tarief": tarief,
-                "Bedrag": bedrag
+                "Bedrag": tarief
             });
         }
     }
