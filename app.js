@@ -36,7 +36,7 @@ function validateAIBtn() {
     const naam = document.getElementById('reportParticipant').value;
     const text = document.getElementById('reportText').value.trim();
     const btn = document.getElementById('btn-ai-improve');
-    if (btn) btn.disabled = (naam === 'Selecteer...' || text.length === 0);
+    if (btn) btn.disabled = (naam === 'Selecteer...' || text.length === 0 || text.length > 1000);
 }
 
 // Functies beschikbaar maken voor HTML onclick attributes
@@ -184,37 +184,41 @@ async function saveReport() {
 
     if (naam === 'Selecteer...' || !tekst) return alert("Vul alles in.");
 
+    const resetBtn = () => setButtonState('btn-save-report', 'default', { text: 'Verslag Versturen', icon: 'send', disabled: false });
+
     setButtonState('btn-save-report', 'loading', { text: 'Versturen...', disabled: true });
 
-    const result = await runSafe(
-        () => API.postReport({ datum, naam, tekst }),
-        (e) => {
-            alert("Fout bij opslaan: " + (e.message || e));
-            setButtonState('btn-save-report', 'error', { text: 'Fout bij opslaan', disabled: false });
+    try {
+        const result = await runSafe(
+            () => API.postReport({ datum, naam, tekst }),
+            (e) => {
+                alert("Fout bij opslaan: " + (e.message || e));
+                setButtonState('btn-save-report', 'error', { text: 'Fout bij opslaan', disabled: false });
+            }
+        );
+
+        if (result) {
+            alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
+            setButtonState('btn-save-report', 'success', { text: 'Verslag Opgeslagen!' });
         }
-    );
-
-    if (result) {
-        alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
-        setButtonState('btn-save-report', 'success', { text: 'Verslag Opgeslagen!' });
+    } finally {
+        setTimeout(resetBtn, 2000);
     }
-
-    setTimeout(() => { 
-        setButtonState('btn-save-report', 'default', { text: 'Verslag Versturen', icon: 'send', disabled: false });
-    }, 2000);
 }
 
 async function improveReportWithAI() {
     const naam = document.getElementById('reportParticipant').value;
     const steekwoorden = document.getElementById('reportText').value.trim();
 
-    if (naam === 'Selecteer...' || !steekwoorden) return;
+    if (naam === 'Selecteer...' || !steekwoorden || steekwoorden.length > 1000) return;
+
+    const resetBtn = () => setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
     setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
     const historyDates = await runSafe(() => API.fetchReportHistory(naam), () => []);
     let historieText = "";
-    
+
     if (historyDates && historyDates.length > 0) {
         const currentDate = document.getElementById('reportDate').value;
         const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 3);
@@ -222,22 +226,35 @@ async function improveReportWithAI() {
         historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const result = await runSafe(
-        () => API.improveReportWithAI(naam, steekwoorden, historieText),
+        () => API.improveReportWithAI(naam, steekwoorden, historieText, controller.signal),
         (e) => {
-            alert("Fout bij AI generatie: " + (e.message || e));
-            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
+            clearTimeout(timeoutId);
+            if (e.name === 'AbortError') {
+                alert("De AI doet er onverwacht lang over, probeer het zo nog eens.");
+            } else {
+                alert("Fout bij AI generatie: " + (e.message || e));
+            }
+            resetBtn();
         }
     );
 
+    clearTimeout(timeoutId);
+
     if (result && result.verbeterdVerslag) {
         document.getElementById('reportText').value = result.verbeterdVerslag;
-        validateAIBtn(); // Valideer de nieuwe staat
+        validateAIBtn();
         setButtonState('btn-ai-improve', 'success', { text: 'Verbeterd!', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
-        setTimeout(() => {
-            setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
-        }, 3000);
+        setTimeout(resetBtn, 3000);
+    } else if (result) {
+        // Onverwacht serverantwoord zonder verbeterdVerslag
+        alert("Onverwacht antwoord van de server, probeer het opnieuw.");
+        resetBtn();
     }
+    // result === null: error callback heeft al resetBtn aangeroepen
 }
 
 async function handleExport(organisatie) {

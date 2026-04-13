@@ -95,9 +95,10 @@ export async function postStuurAanmaning(payload) {
     return result;
 }
 
-export async function improveReportWithAI(naam, steekwoorden, historie) {
+export async function improveReportWithAI(naam, steekwoorden, historie, signal) {
     const response = await fetch('/.netlify/functions/ai-writer', {
         method: 'POST',
+        signal,
         body: JSON.stringify({ naam, steekwoorden, historie })
     });
     if (!response.ok) {

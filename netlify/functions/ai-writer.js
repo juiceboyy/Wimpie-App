@@ -15,7 +15,9 @@ exports.handler = async function(event, context) {
 
   try {
     const payload = JSON.parse(event.body);
-    const { naam, steekwoorden, historie } = payload;
+    const { naam } = payload;
+    const steekwoorden = (payload.steekwoorden || '').trim().replace(/\s+/g, ' ');
+    const historie = (payload.historie || '').trim().replace(/\s+/g, ' ');
 
     if (!steekwoorden) {
       return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Geen steekwoorden meegegeven.' }) };
