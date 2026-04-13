@@ -15,23 +15,25 @@ exports.handler = async function(event, context) {
 
   try {
     const payload = JSON.parse(event.body);
-    const { naam, steekwoorden, historie } = payload;
+    const { naam } = payload;
+    const steekwoorden = (payload.steekwoorden || '').trim().replace(/\s+/g, ' ');
+    const historie = (payload.historie || '').trim().replace(/\s+/g, ' ');
 
     if (!steekwoorden) {
       return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Geen steekwoorden meegegeven.' }) };
     }
 
-    const prompt = `Je bent een professionele en empathische zorgverlener bij VOF Wimpie & de Domino's. Schrijf een beknopt dagverslag (maximaal 3-4 zinnen) in de ik-vorm (waarbij jij de begeleider bent) over deelnemer ${naam}.
+    const prompt = `Je bent een begeleider bij VOF Wimpie & de Domino's. Schrijf een extreem beknopte, to-the-point memo (maximaal 2 tot 3 korte zinnen) in de ik-vorm over deelnemer ${naam}. Geen overbodige opsmuk of lange introducties, puur de feiten en observaties.
 
 Hier zijn twee voorbeelden van de gewenste schrijfstijl:
 
 Voorbeeld 1:
 Steekwoorden: gitaar, vrolijk, meezingen
-Verslag: Ik merkte dat ${naam} vandaag erg vrolijk binnenkwam op de dagbesteding. Tijdens de repetitie hebben we samen gitaar gespeeld en zong ${naam} enthousiast mee met de rest van de band. Ik vond het een erg muzikale en positieve middag!
+Verslag: ${naam} kwam vrolijk binnen. We hebben samen gitaar gespeeld waarbij zichtbaar enthousiast werd meegezongen. Een positieve muzikale sessie.
 
 Voorbeeld 2:
 Steekwoorden: rustige start, luisteren, genieten
-Verslag: Vandaag zag ik dat ${naam} de dag wat rustig begon en vooral behoefte had aan ontspanning. ${naam} heeft heerlijk vanaf de zijlijn zitten luisteren naar de muziek en zichtbaar genoten van de sfeer. Later op de dag zag ik meer interactie en een mooie glimlach.
+Verslag: ${naam} had een rustige start met veel behoefte aan ontspanning. Heeft vooral vanaf de zijlijn genoten van het luisteren naar de muziek.
 
 Gebruik deze context van eerdere verslagen voor de juiste toon en continuïteit: ${historie || 'Geen eerdere verslagen.'}.
 
