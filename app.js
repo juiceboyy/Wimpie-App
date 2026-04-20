@@ -227,7 +227,7 @@ async function improveReportWithAI() {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 24000);
 
     const result = await runSafe(
         () => API.improveReportWithAI(naam, steekwoorden, historieText, controller.signal),
