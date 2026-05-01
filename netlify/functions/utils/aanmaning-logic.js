@@ -110,7 +110,10 @@ async function getOpenstaandeFacturen({ debug = false } = {}) {
 
       if (!datumStr || !factuurnummer || !klant_naam) return;
 
-      const jaar = factuurnummer.includes('.') ? parseInt(factuurnummer.split('.')[0], 10) : new Date().getFullYear();
+      // Strip alle punten (duizendtal-separatoren zoals "2.026.020" → "2026020") en zoek 4-cijferig jaar
+      const fnStripped = String(factuurnummer).replace(/\./g, '');
+      const jaarMatch = fnStripped.match(/^(20\d{2})/);
+      const jaar = jaarMatch ? parseInt(jaarMatch[1], 10) : new Date().getFullYear();
       const factuurDatum = parseDutchDate(datumStr, jaar);
       if (!factuurDatum) {
         console.error(`[aanmaning] Kon datum niet parsen: "${datumStr}" (rij ${rowIndex + 2}, Q${sheetIndex + 1} Verkoop)`);
