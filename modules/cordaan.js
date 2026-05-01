@@ -44,11 +44,10 @@ export function generateCordaanExcel(data, yearMonth) {
             "Naam": row.naam,
             "BSN": row.bsn,
             "Medewerkernummer": "9125107",
-            "Activiteit": row.activiteit_omschrijving || row.code, // Gebruik omschrijving uit legenda, fallback op code
+            "Activiteit": row.activiteit_omschrijving || row.code,
             "Begindatum": formattedDate,
             "Minuten": minuten,
             "Dagdelen": dagdelen,
-            "VG": row.code, // Code komt in kolom VG
             "Tarief": tarief,
             "Bedrag": bedrag
         });
@@ -69,7 +68,6 @@ export function generateCordaanExcel(data, yearMonth) {
                 "Begindatum": "",
                 "Minuten": subMinuten,
                 "Dagdelen": subDagdelen,
-                "VG": "",
                 "Tarief": "",
                 "Bedrag": subBedrag
             });
@@ -114,7 +112,6 @@ export function generateCordaanExcel(data, yearMonth) {
                 "Begindatum": formattedDate,
                 "Minuten": 1,
                 "Dagdelen": "",
-                "VG": "",
                 "Tarief": tarief,
                 "Bedrag": tarief
             });
@@ -129,7 +126,6 @@ export function generateCordaanExcel(data, yearMonth) {
                     "Begindatum": "",
                     "Minuten": subVervoerMinuten,
                     "Dagdelen": "",
-                    "VG": "",
                     "Tarief": "",
                     "Bedrag": subVervoerBedrag
                 });
@@ -150,7 +146,6 @@ export function generateCordaanExcel(data, yearMonth) {
             "Begindatum": "",
             "Minuten": "",
             "Dagdelen": "",
-            "VG": "",
             "Tarief": "",
             "Bedrag": totaalVervoerBedrag
         });
@@ -167,7 +162,6 @@ export function generateCordaanExcel(data, yearMonth) {
         "Begindatum": "",
         "Minuten": "",
         "Dagdelen": "",
-        "VG": "",
         "Tarief": "",
         "Bedrag": totaalUrenBedrag + totaalVervoerBedrag
     });
@@ -226,7 +220,7 @@ export function generateCordaanExcel(data, yearMonth) {
                         ws[cellRef].s.fill = { fgColor: { rgb: isHeader ? "D9D9D9" : "F2F2F2" } };
                     }
 
-                    if (!isHeader && (C === 8 || C === 9)) {
+                    if (!isHeader && (C === 7 || C === 8)) {
                         ws[cellRef].z = '"€ "#,##0.00';
                     }
                 }
