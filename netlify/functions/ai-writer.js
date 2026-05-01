@@ -48,7 +48,7 @@ Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelij
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 150 } })
     });
 
     if (!response.ok) {

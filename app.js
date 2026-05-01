@@ -221,7 +221,7 @@ async function improveReportWithAI() {
 
     if (historyDates && historyDates.length > 0) {
         const currentDate = document.getElementById('reportDate').value;
-        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 3);
+        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 1);
         const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
         historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
     }
