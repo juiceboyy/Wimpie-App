@@ -210,39 +210,19 @@ async function improveReportWithAI() {
     const naam = document.getElementById('reportParticipant').value;
     const steekwoorden = document.getElementById('reportText').value.trim();
 
-    if (naam === 'Selecteer...' || !steekwoorden || steekwoorden.length > 1000) return;
+    if (naam === 'Selecteer...' || !steekwoorden) return;
 
     const resetBtn = () => setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
     setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
-    const historyDates = await runSafe(() => API.fetchReportHistory(naam), () => []);
-    let historieText = "";
-
-    if (historyDates && historyDates.length > 0) {
-        const currentDate = document.getElementById('reportDate').value;
-        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 1);
-        const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
-        historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 24000);
-
     const result = await runSafe(
-        () => API.improveReportWithAI(naam, steekwoorden, historieText, controller.signal),
+        () => API.improveReportWithAI(naam, steekwoorden),
         (e) => {
-            clearTimeout(timeoutId);
-            if (e.name === 'AbortError') {
-                alert("De AI doet er onverwacht lang over, probeer het zo nog eens.");
-            } else {
-                alert("Fout bij AI generatie: " + (e.message || e));
-            }
+            alert("Fout bij AI generatie: " + (e.message || e));
             resetBtn();
         }
     );
-
-    clearTimeout(timeoutId);
 
     if (result && result.verbeterdVerslag) {
         document.getElementById('reportText').value = result.verbeterdVerslag;
@@ -250,11 +230,9 @@ async function improveReportWithAI() {
         setButtonState('btn-ai-improve', 'success', { text: 'Verbeterd!', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
         setTimeout(resetBtn, 3000);
     } else if (result) {
-        // Onverwacht serverantwoord zonder verbeterdVerslag
         alert("Onverwacht antwoord van de server, probeer het opnieuw.");
         resetBtn();
     }
-    // result === null: error callback heeft al resetBtn aangeroepen
 }
 
 async function handleExport(organisatie) {
