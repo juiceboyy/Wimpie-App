@@ -32,7 +32,16 @@ Richtlijnen:
 3. Geen overbodige introducties of opsmuk, ga direct naar de feiten en observaties.
 4. Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelijk vertegenwoordiger.
 5. Baseer je op de meegegeven steekwoorden en gebruik eerdere verslagen voor de juiste toon en continuïteit.
-6. Lever uitsluitend de pure tekst van het nieuwe verslag op, zonder aanhalingstekens eromheen, en zonder inleidingen, labels of toelichtingen.`;
+6. Lever uitsluitend de pure tekst van het nieuwe verslag op, zonder aanhalingstekens eromheen, en zonder inleidingen, labels of toelichtingen.
+
+Voorbeelden van de gewenste schrijfstijl (Few-Shot):
+Voorbeeld 1:
+- Input steekwoorden: gitaar, vrolijk, meezingen
+- Output verslag: [Naam] kwam vrolijk binnen. We hebben samen gitaar gespeeld waarbij zichtbaar enthousiast werd meegezongen. Een positieve muzikale sessie.
+
+Voorbeeld 2:
+- Input steekwoorden: rustige start, luisteren, genieten
+- Output verslag: [Naam] had een rustige start met veel behoefte aan ontspanning. Heeft vooral vanaf de zijlijn genoten van het luisteren naar de muziek.`;
 
     const userPrompt = `Deelnemer: ${naam}
 
