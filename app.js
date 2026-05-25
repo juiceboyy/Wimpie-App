@@ -129,17 +129,16 @@ async function loadReportHistory() {
         loadExistingReport();
     });
 
-    // Haal alvast het meest recente eerdere verslag op de achtergrond op (UX optimalisatie)
+    // Haal alvast de laatste 5 eerdere verslagen parallel op de achtergrond op (UX optimalisatie)
     if (datums && datums.length > 0) {
         const currentDate = document.getElementById('reportDate').value;
-        const pastDates = datums.filter(d => d !== currentDate).slice(0, 1);
+        const pastDates = datums.filter(d => d !== currentDate).slice(0, 5);
         if (pastDates.length > 0) {
             runSafe(
                 async () => {
-                    const data = await API.fetchReport(pastDates[0], naam);
-                    if (data && data.tekst) {
-                        cachedReportHistoryText = data.tekst;
-                    }
+                    const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
+                    const filteredReports = reports.filter(r => r && r.tekst);
+                    cachedReportHistoryText = filteredReports.map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
                 },
                 () => { /* Stilzwijgend falen op de achtergrond */ }
             );
