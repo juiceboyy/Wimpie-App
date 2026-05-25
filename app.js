@@ -7,6 +7,8 @@ import { calculateAndRenderExpenses } from './modules/expenses.js';
 import { controleerAanmaningen } from './modules/aanmaning.js';
 import { runSafe } from './modules/utils.js';
 
+let cachedReportHistoryText = "";
+
 // INIT
 function init() {
     if (!verifyAccess()) return;
@@ -104,6 +106,8 @@ async function loadReportHistory() {
     const container = document.getElementById('historyContainer');
     const list = document.getElementById('historyList');
 
+    cachedReportHistoryText = ""; // Reset cache bij deelnemerwissel
+
     if (naam === 'Selecteer...') {
         container.classList.add('hidden');
         return;
@@ -124,6 +128,23 @@ async function loadReportHistory() {
         document.getElementById('reportDate').value = d;
         loadExistingReport();
     });
+
+    // Haal alvast het meest recente eerdere verslag op de achtergrond op (UX optimalisatie)
+    if (datums && datums.length > 0) {
+        const currentDate = document.getElementById('reportDate').value;
+        const pastDates = datums.filter(d => d !== currentDate).slice(0, 1);
+        if (pastDates.length > 0) {
+            runSafe(
+                async () => {
+                    const data = await API.fetchReport(pastDates[0], naam);
+                    if (data && data.tekst) {
+                        cachedReportHistoryText = data.tekst;
+                    }
+                },
+                () => { /* Stilzwijgend falen op de achtergrond */ }
+            );
+        }
+    }
 }
 
 async function loadExistingReport() {
@@ -217,7 +238,7 @@ async function improveReportWithAI() {
     setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
     const result = await runSafe(
-        () => API.improveReportWithAI(naam, steekwoorden),
+        () => API.improveReportWithAI(naam, steekwoorden, cachedReportHistoryText),
         (e) => {
             alert("Fout bij AI generatie: " + (e.message || e));
             resetBtn();

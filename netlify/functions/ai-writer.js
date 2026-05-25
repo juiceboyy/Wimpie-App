@@ -15,8 +15,9 @@ exports.handler = async function(event, context) {
 
   try {
     const payload = JSON.parse(event.body);
-    const { naam } = payload;
+    const { naam, historie } = payload;
     const steekwoorden = (payload.steekwoorden || '').trim().replace(/\s+/g, ' ');
+    const cleanedHistorie = (historie || '').trim().replace(/\s+/g, ' ');
 
     if (!steekwoorden) {
       return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Geen steekwoorden meegegeven.' }) };
@@ -30,7 +31,7 @@ Richtlijnen:
 2. Schrijf in de ik-vorm (bijv. "We hebben...", "Ik zag...").
 3. Geen overbodige introducties of opsmuk, ga direct naar de feiten en observaties.
 4. Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelijk vertegenwoordiger.
-5. Baseer je op de meegegeven steekwoorden.
+5. Baseer je op de meegegeven steekwoorden en gebruik eerdere verslagen (indien meegegeven) ter referentie voor de juiste toon en continuïteit.
 6. Lever uitsluitend de pure tekst van het nieuwe verslag op, zonder aanhalingstekens eromheen, en zonder inleidingen, labels of toelichtingen.
 
 Voorbeelden van de gewenste schrijfstijl (Few-Shot):
@@ -43,7 +44,12 @@ Voorbeeld 2:
 - Output verslag: [Naam] had een rustige start met veel behoefte aan ontspanning. Heeft vooral vanaf de zijlijn genoten van het luisteren naar de muziek.`;
 
     const userPrompt = `Deelnemer: ${naam}
-Nieuwe steekwoorden voor vandaag: ${steekwoorden}
+
+Eerdere verslagen ter referentie voor toon en continuïteit:
+${cleanedHistorie || 'Geen eerdere verslagen.'}
+
+Nieuwe steekwoorden voor vandaag:
+${steekwoorden}
 
 Schrijf nu het nieuwe verslag:`;
 
