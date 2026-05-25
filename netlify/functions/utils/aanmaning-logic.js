@@ -19,6 +19,15 @@ const MAANDEN = { jan:0, feb:1, mrt:2, apr:3, mei:4, jun:5, jul:6, aug:7, sep:8,
 
 function parseDutchDate(dateStr, year) {
   if (!dateStr) return null;
+  const currentYear = new Date().getFullYear();
+
+  // Saniteer het jaar: 2-cijferig (bijv. 26) → 2026, ontbrekend/ongeldig/< 2000 → huidig jaar
+  let safeYear;
+  if (year !== undefined && year !== null && !isNaN(year)) {
+    safeYear = year < 100 ? 2000 + year : (year < 2000 ? currentYear : year);
+  } else {
+    safeYear = currentYear;
+  }
 
   // Formaat: "15-feb", "4-mrt" (Google Sheets korte maandnaam)
   const kortMatch = dateStr.match(/^(\d{1,2})-([a-z]{3})$/i);
@@ -26,16 +35,27 @@ function parseDutchDate(dateStr, year) {
     const day = parseInt(kortMatch[1], 10);
     const month = MAANDEN[kortMatch[2].toLowerCase()];
     if (month === undefined) return null;
-    return new Date(year, month, day);
+    return new Date(safeYear, month, day);
   }
 
-  // Fallback: DD-MM-YYYY
   const parts = dateStr.split('-');
+
+  // Formaat: DD-MM (geen jaar)
+  if (parts.length === 2) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    if (!isNaN(day) && !isNaN(month)) return new Date(safeYear, month, day);
+  }
+
+  // Formaat: DD-MM-YYYY of DD-MM-YY
   if (parts.length === 3) {
     const day = parseInt(parts[0], 10);
     const month = parseInt(parts[1], 10) - 1;
-    const yr = parseInt(parts[2], 10);
-    if (!isNaN(day) && !isNaN(month) && !isNaN(yr)) return new Date(yr, month, day);
+    let yr = parseInt(parts[2], 10);
+    if (isNaN(yr) || yr < 2000) {
+      yr = (yr >= 0 && yr < 100) ? 2000 + yr : safeYear;
+    }
+    if (!isNaN(day) && !isNaN(month)) return new Date(yr, month, day);
   }
 
   return null;
@@ -82,14 +102,18 @@ async function getOpenstaandeFacturen({ debug = false } = {}) {
         });
       }
 
-      if (betaald !== undefined && betaald !== '') return; // al betaald
+      const betaaldStr = (betaald !== undefined && betaald !== null) ? String(betaald).trim() : '';
+      if (betaaldStr !== '') return; // al betaald
 
       const omschrijving = row[2];
       const bedrag = row[4];
 
       if (!datumStr || !factuurnummer || !klant_naam) return;
 
-      const jaar = factuurnummer.includes('.') ? parseInt(factuurnummer.split('.')[0], 10) : new Date().getFullYear();
+      // Strip alle punten (duizendtal-separatoren zoals "2.026.020" → "2026020") en zoek 4-cijferig jaar
+      const fnStripped = String(factuurnummer).replace(/\./g, '');
+      const jaarMatch = fnStripped.match(/^(20\d{2})/);
+      const jaar = jaarMatch ? parseInt(jaarMatch[1], 10) : new Date().getFullYear();
       const factuurDatum = parseDutchDate(datumStr, jaar);
       if (!factuurDatum) {
         console.error(`[aanmaning] Kon datum niet parsen: "${datumStr}" (rij ${rowIndex + 2}, Q${sheetIndex + 1} Verkoop)`);

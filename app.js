@@ -7,6 +7,8 @@ import { calculateAndRenderExpenses } from './modules/expenses.js';
 import { controleerAanmaningen } from './modules/aanmaning.js';
 import { runSafe } from './modules/utils.js';
 
+let cachedReportHistoryText = "";
+
 // INIT
 function init() {
     if (!verifyAccess()) return;
@@ -104,6 +106,8 @@ async function loadReportHistory() {
     const container = document.getElementById('historyContainer');
     const list = document.getElementById('historyList');
 
+    cachedReportHistoryText = ""; // Reset cache bij deelnemerwissel
+
     if (naam === 'Selecteer...') {
         container.classList.add('hidden');
         return;
@@ -124,6 +128,22 @@ async function loadReportHistory() {
         document.getElementById('reportDate').value = d;
         loadExistingReport();
     });
+
+    // Haal alvast de laatste 5 eerdere verslagen parallel op de achtergrond op (UX optimalisatie)
+    if (datums && datums.length > 0) {
+        const currentDate = document.getElementById('reportDate').value;
+        const pastDates = datums.filter(d => d !== currentDate).slice(0, 5);
+        if (pastDates.length > 0) {
+            runSafe(
+                async () => {
+                    const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
+                    const filteredReports = reports.filter(r => r && r.tekst);
+                    cachedReportHistoryText = filteredReports.map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
+                },
+                () => { /* Stilzwijgend falen op de achtergrond */ }
+            );
+        }
+    }
 }
 
 async function loadExistingReport() {
@@ -210,39 +230,19 @@ async function improveReportWithAI() {
     const naam = document.getElementById('reportParticipant').value;
     const steekwoorden = document.getElementById('reportText').value.trim();
 
-    if (naam === 'Selecteer...' || !steekwoorden || steekwoorden.length > 1000) return;
+    if (naam === 'Selecteer...' || !steekwoorden) return;
 
     const resetBtn = () => setButtonState('btn-ai-improve', 'default', { text: 'AI Verbetering', icon: 'sparkles', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
     setButtonState('btn-ai-improve', 'loading', { text: 'AI schrijft...', disabled: true, iconSize: 'w-4 h-4', spacing: 'mr-2' });
 
-    const historyDates = await runSafe(() => API.fetchReportHistory(naam), () => []);
-    let historieText = "";
-
-    if (historyDates && historyDates.length > 0) {
-        const currentDate = document.getElementById('reportDate').value;
-        const pastDates = historyDates.filter(d => d !== currentDate).slice(0, 3);
-        const reports = await Promise.all(pastDates.map(d => runSafe(() => API.fetchReport(d, naam), () => null)));
-        historieText = reports.filter(r => r && r.tekst).map((r, i) => `Verslag ${i+1}: ${r.tekst}`).join(' | ');
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 24000);
-
     const result = await runSafe(
-        () => API.improveReportWithAI(naam, steekwoorden, historieText, controller.signal),
+        () => API.improveReportWithAI(naam, steekwoorden, cachedReportHistoryText),
         (e) => {
-            clearTimeout(timeoutId);
-            if (e.name === 'AbortError') {
-                alert("De AI doet er onverwacht lang over, probeer het zo nog eens.");
-            } else {
-                alert("Fout bij AI generatie: " + (e.message || e));
-            }
+            alert("Fout bij AI generatie: " + (e.message || e));
             resetBtn();
         }
     );
-
-    clearTimeout(timeoutId);
 
     if (result && result.verbeterdVerslag) {
         document.getElementById('reportText').value = result.verbeterdVerslag;
@@ -250,11 +250,9 @@ async function improveReportWithAI() {
         setButtonState('btn-ai-improve', 'success', { text: 'Verbeterd!', disabled: false, iconSize: 'w-4 h-4', spacing: 'mr-2' });
         setTimeout(resetBtn, 3000);
     } else if (result) {
-        // Onverwacht serverantwoord zonder verbeterdVerslag
         alert("Onverwacht antwoord van de server, probeer het opnieuw.");
         resetBtn();
     }
-    // result === null: error callback heeft al resetBtn aangeroepen
 }
 
 async function handleExport(organisatie) {
