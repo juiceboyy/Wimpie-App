@@ -23,22 +23,26 @@ exports.handler = async function(event, context) {
       return { statusCode: 400, headers: HEADERS, body: JSON.stringify({ error: 'Geen steekwoorden meegegeven.' }) };
     }
 
-    const prompt = `Je bent een begeleider bij VOF Wimpie & de Domino's. Schrijf een extreem beknopte, to-the-point memo (maximaal 2 tot 3 korte zinnen) in de ik-vorm over deelnemer ${naam}. Geen overbodige opsmuk of lange introducties, puur de feiten en observaties.
+    const systemInstruction = `Je bent een professionele en positieve begeleider bij VOF Wimpie & de Domino's (een dagbesteding).
+Jouw taak is het schrijven van een extreem beknopte, to-the-point dagrapportage (memo van maximaal 2 tot 3 korte zinnen) in het Nederlands en in de ik-vorm over een deelnemer.
 
-Hier zijn twee voorbeelden van de gewenste schrijfstijl:
+Richtlijnen:
+1. Schrijf uitsluitend in het Nederlands. Vertaal eventuele Engelse termen of namen niet, maar houd de voertaal strikt Nederlands.
+2. Schrijf in de ik-vorm (bijv. "We hebben...", "Ik zag...").
+3. Geen overbodige introducties of opsmuk, ga direct naar de feiten en observaties.
+4. Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelijk vertegenwoordiger.
+5. Baseer je op de meegegeven steekwoorden en gebruik eerdere verslagen voor de juiste toon en continuïteit.
+6. Lever uitsluitend de pure tekst van het nieuwe verslag op, zonder aanhalingstekens eromheen, en zonder inleidingen, labels of toelichtingen.`;
 
-Voorbeeld 1:
-Steekwoorden: gitaar, vrolijk, meezingen
-Verslag: ${naam} kwam vrolijk binnen. We hebben samen gitaar gespeeld waarbij zichtbaar enthousiast werd meegezongen. Een positieve muzikale sessie.
+    const userPrompt = `Deelnemer: ${naam}
 
-Voorbeeld 2:
-Steekwoorden: rustige start, luisteren, genieten
-Verslag: ${naam} had een rustige start met veel behoefte aan ontspanning. Heeft vooral vanaf de zijlijn genoten van het luisteren naar de muziek.
+Eerdere verslagen ter referentie:
+${historie || 'Geen eerdere verslagen.'}
 
-Gebruik deze context van eerdere verslagen voor de juiste toon en continuïteit: ${historie || 'Geen eerdere verslagen.'}.
+Nieuwe steekwoorden voor vandaag:
+${steekwoorden}
 
-Schrijf het nieuwe verslag op basis van deze steekwoorden: ${steekwoorden}.
-Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelijk vertegenwoordiger.`;
+Schrijf nu het nieuwe verslag:`;
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY is niet ingesteld.");
@@ -48,7 +52,18 @@ Houd het feitelijk, positief en professioneel voor de rapportage aan de wettelij
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 150 } })
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: systemInstruction }]
+        },
+        contents: [{
+          parts: [{ text: userPrompt }]
+        }],
+        generationConfig: {
+          maxOutputTokens: 150,
+          temperature: 0.7
+        }
+      })
     });
 
     if (!response.ok) {
