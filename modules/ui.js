@@ -72,8 +72,10 @@ export function renderHistoryList(datums, onSelectCallback) {
     list.innerHTML = '';
 
     if (datums.length === 0) {
+        list.className = "flex flex-wrap gap-2";
         list.innerHTML = '<span class="text-xs text-slate-400">Nog geen verslagen.</span>';
-    } else {
+    } else if (datums.length <= 10) {
+        list.className = "flex flex-wrap gap-2";
         datums.forEach(d => {
             const delen = d.split('-');
             const nlDatum = `${delen[2]}-${delen[1]}`;
@@ -83,6 +85,84 @@ export function renderHistoryList(datums, onSelectCallback) {
             badge.innerText = nlDatum;
             badge.onclick = () => onSelectCallback(d);
             list.appendChild(badge);
+        });
+    } else {
+        list.className = "space-y-4 w-full";
+
+        const uniqueMonths = new Set(datums.map(d => d.substring(0, 7))); // 'YYYY-MM'
+        const useYearGrouping = uniqueMonths.size > 10;
+
+        const groups = {};
+        const groupKeys = [];
+
+        if (useYearGrouping) {
+            datums.forEach(d => {
+                const delen = d.split('-');
+                const year = delen[0];
+                const groupKey = year;
+
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                    groupKeys.push(groupKey);
+                }
+                groups[groupKey].push(d);
+            });
+        } else {
+            const monthNames = {
+                '01': 'Januari',
+                '02': 'Februari',
+                '03': 'Maart',
+                '04': 'April',
+                '05': 'Mei',
+                '06': 'Juni',
+                '07': 'Juli',
+                '08': 'Augustus',
+                '09': 'September',
+                '10': 'Oktober',
+                '11': 'November',
+                '12': 'December'
+            };
+
+            datums.forEach(d => {
+                const delen = d.split('-');
+                const year = delen[0];
+                const month = delen[1];
+                const monthName = monthNames[month] || month;
+                const groupKey = `${monthName} ${year}`;
+
+                if (!groups[groupKey]) {
+                    groups[groupKey] = [];
+                    groupKeys.push(groupKey);
+                }
+                groups[groupKey].push(d);
+            });
+        }
+
+        groupKeys.forEach(groupKey => {
+            const section = document.createElement('div');
+            section.className = "space-y-2";
+
+            const header = document.createElement('div');
+            header.className = "text-xs font-bold text-slate-400 uppercase tracking-wider mt-1 block";
+            header.innerText = groupKey;
+            section.appendChild(header);
+
+            const badgesContainer = document.createElement('div');
+            badgesContainer.className = "flex flex-wrap gap-2";
+
+            groups[groupKey].forEach(d => {
+                const delen = d.split('-');
+                const nlDatum = `${delen[2]}-${delen[1]}`;
+
+                const badge = document.createElement('button');
+                badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
+                badge.innerText = nlDatum;
+                badge.onclick = () => onSelectCallback(d);
+                badgesContainer.appendChild(badge);
+            });
+
+            section.appendChild(badgesContainer);
+            list.appendChild(section);
         });
     }
 }
