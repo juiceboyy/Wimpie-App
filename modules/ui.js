@@ -143,12 +143,26 @@ export function renderHistoryList(datums, onSelectCallback) {
             section.className = "space-y-2";
 
             const header = document.createElement('div');
-            header.className = "text-xs font-bold text-slate-400 uppercase tracking-wider mt-1 block";
-            header.innerText = groupKey;
-            section.appendChild(header);
+            header.className = "flex items-center gap-1.5 cursor-pointer select-none text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors mt-1 py-1 w-fit";
+            header.innerHTML = `
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                <span class="tracking-wider uppercase">${groupKey}</span>
+            `;
 
             const badgesContainer = document.createElement('div');
-            badgesContainer.className = "flex flex-wrap gap-2";
+            badgesContainer.className = "flex flex-wrap gap-2 hidden";
+
+            header.onclick = () => {
+                const isHidden = badgesContainer.classList.toggle('hidden');
+                const icon = header.querySelector('.lucide-chevron-right, [data-lucide="chevron-right"]');
+                if (icon) {
+                    if (isHidden) {
+                        icon.classList.remove('rotate-90');
+                    } else {
+                        icon.classList.add('rotate-90');
+                    }
+                }
+            };
 
             groups[groupKey].forEach(d => {
                 const delen = d.split('-');
@@ -161,9 +175,12 @@ export function renderHistoryList(datums, onSelectCallback) {
                 badgesContainer.appendChild(badge);
             });
 
+            section.appendChild(header);
             section.appendChild(badgesContainer);
             list.appendChild(section);
         });
+
+        if (window.lucide) window.lucide.createIcons();
     }
 }
 
