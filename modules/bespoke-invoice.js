@@ -43,7 +43,7 @@ export async function generateBespokeInvoicePDF(adres, bedrag, omschrijving) {
             { text: `€ ${totalAmount.toFixed(2).replace('.', ',')}`, margin: [0, 5, 0, 5] }
         ],
         [
-            { text: 'Totaal', style: 'tableHeader', alignment: 'right' },
+            { text: 'Totaal (vrijstelling btw ivm zorgtaak)', style: 'tableHeader' },
             { text: `€ ${totalAmount.toFixed(2).replace('.', ',')}`, style: 'tableHeader' }
         ]
     ];
