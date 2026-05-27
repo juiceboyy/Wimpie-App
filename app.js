@@ -1,5 +1,6 @@
 import * as API from './modules/api.js';
 import { handleExportAction } from './modules/export.js';
+import { generateBespokeInvoicePDF } from './modules/bespoke-invoice.js';
 import { verifyAccess } from './modules/auth.js';
 import { switchTab, renderParticipants, fillSelect, renderHistoryList, updateReportView, updatePresenceVisuals, setupDynamicUI, setButtonState } from './modules/ui.js';
 import * as State from './modules/state.js';
@@ -51,6 +52,7 @@ function exposeGlobals() {
     window.calculateExpenses = calculateAndRenderExpenses;
     window.controleerAanmaningen = controleerAanmaningen;
     window.improveReportWithAI = improveReportWithAI;
+    window.generateBespokeInvoice = generateBespokeInvoice;
 }
 
 async function fetchParticipants() {
@@ -268,6 +270,54 @@ async function handleExport(organisatie) {
     });
 
     status.classList.add('hidden');
+}
+
+async function generateBespokeInvoice() {
+    const adres = document.getElementById('bespokeAddress').value.trim();
+    const omschrijving = document.getElementById('bespokeDescription').value.trim();
+    const bedragInput = document.getElementById('bespokeAmount').value.trim();
+
+    if (!adres || !omschrijving || !bedragInput) {
+        return alert("Vul a.b.v. alle velden in (Factuuradres, Omschrijving en Factuurbedrag).");
+    }
+
+    const bedrag = parseFloat(bedragInput);
+    if (isNaN(bedrag) || bedrag <= 0) {
+        return alert("Voer een geldig factuurbedrag in groter dan 0.");
+    }
+
+    const resetBtn = () => setButtonState('btn-generate-bespoke', 'default', { 
+        text: 'Genereer Maatwerk Factuur (PDF)', 
+        icon: 'file-plus', 
+        disabled: false 
+    });
+
+    setButtonState('btn-generate-bespoke', 'loading', { 
+        text: 'Genereren...', 
+        disabled: true, 
+        spacing: 'mr-2', 
+        iconSize: 'w-4 h-4' 
+    });
+
+    try {
+        await runSafe(
+            async () => {
+                await generateBespokeInvoicePDF(adres, bedrag, omschrijving);
+                setButtonState('btn-generate-bespoke', 'success', { text: 'Gedownload!', disabled: false });
+                
+                // Formulier leegmaken na succesvolle download
+                document.getElementById('bespokeAddress').value = '';
+                document.getElementById('bespokeDescription').value = '';
+                document.getElementById('bespokeAmount').value = '';
+            },
+            (e) => {
+                alert("Fout bij genereren factuur: " + (e.message || e));
+                setButtonState('btn-generate-bespoke', 'error', { text: 'Fout bij opslaan', disabled: false });
+            }
+        );
+    } finally {
+        setTimeout(resetBtn, 2000);
+    }
 }
 
 // Start de applicatie
