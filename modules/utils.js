@@ -17,7 +17,7 @@ export function getDisplayMonth(monthStr) {
     return (mIndex >= 0 && mIndex < 12) ? monthNames[mIndex] : monthStr;
 }
 
-export function createInvoiceDocDefinition({ invoiceNumber, recipientText, betreftText, tableBody, footerText }) {
+export function createInvoiceDocDefinition({ invoiceNumber, recipientText, betreftText, tableBody, footerText, widths = ['*', 'auto', 'auto', 'auto'] }) {
     return {
         content: [
             { text: "VOF Wimpie & de Domino's", style: 'header' },
@@ -27,13 +27,13 @@ export function createInvoiceDocDefinition({ invoiceNumber, recipientText, betre
             { text: recipientText, margin: [0, 0, 0, 20] },
 
             { text: `Factuur nr: ${invoiceNumber}`, bold: true },
-            { text: `Datum: ${new Date().toLocaleDateString('nl-NL')}` },
-            { text: `Betreft: ${betreftText}`, margin: [0, 0, 0, 20] },
+            { text: `Datum: ${new Date().toLocaleDateString('nl-NL')}`, margin: [0, 0, 0, betreftText ? 0 : 20] },
+            ...(betreftText ? [{ text: `Betreft: ${betreftText}`, margin: [0, 0, 0, 20] }] : []),
 
             {
                 table: {
                     headerRows: 1,
-                    widths: ['*', 'auto', 'auto', 'auto'],
+                    widths: widths,
                     body: tableBody
                 },
                 layout: 'lightHorizontalLines',
