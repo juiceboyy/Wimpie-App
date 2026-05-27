@@ -32,6 +32,7 @@ We werken strikt volgens het **Single Responsibility Principle (SRP)**.
 2. **GEEN `append` bij Sheets API:** Gebruik voor het wegschrijven van nieuwe factuur- of logboekregels bij voorkeur dynamisch berekende ranges met de `.update` methode (de "Sniper" methode) of `INSERT_ROWS` opties om opmaak-conflicten te voorkomen.
 3. **Blokkeer de UI niet:** Alle API calls, PDF-generaties en Excel-creaties zijn asynchroon. Gebruik consequent `async/await` en zorg voor correcte error handling (`try/catch`) en fallback UI-berichten (bijv. `message || 'Standaard bericht'`).
 4. **Verborgen Mac bestanden:** Negeer alle `._*` en `.DS_Store` bestanden (deze staan in `.gitignore`).
+5. **GEEN spin-buttons (pijltjes) bij getal-invoervelden:** Verberg standaard altijd de omhoog/omlaag pijltjes bij getal-invoervelden (`input[type=number]`) via de CSS (`styles.css`) om de UI strak, minimalistisch en iOS-stijl uniform te houden.
 
 ## 🎯 Doelstelling bij code-generatie
 Schrijf schone, gedocumenteerde code, voorkom "God-functions" en respecteer de bestaande modulaire opbouw. Als je nieuwe functionaliteit toevoegt, vraag jezelf af: "In welk los blokje hoort dit thuis?"
