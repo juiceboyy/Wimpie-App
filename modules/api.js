@@ -106,3 +106,27 @@ export async function improveReportWithAI(naam, steekwoorden, historie) {
     }
     return response.json();
 }
+
+export async function fetchPerformances(date) {
+    const response = await fetch(`${SCRIPT_URL}?type=optredens&datum=${date}`);
+    if (!response.ok) throw new Error('API gaf een error: ' + response.status);
+    return response.json();
+}
+
+export async function postPerformances(date, titel, entries) {
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'optredens', datum: date, titel, entries })
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Server error bij opslaan optredens');
+    }
+    return response.json();
+}
+
+export async function fetchPerformancesHistory() {
+    const response = await fetch(`${SCRIPT_URL}?type=optredens_historie`);
+    if (!response.ok) throw new Error('API gaf een error: ' + response.status);
+    return response.json();
+}
