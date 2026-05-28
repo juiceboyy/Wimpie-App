@@ -93,7 +93,7 @@ export async function loadPerformancesHistory() {
 }
 
 /**
- * Rendert de lijst met iOS-stijl kaarten voor alle deelnemers.
+ * Rendert de lijst met iOS-stijl kaarten voor alle deelnemers in een uiterst compact design.
  */
 function renderPerformances(entries) {
   const container = document.getElementById('performancesList');
@@ -113,73 +113,59 @@ function renderPerformances(entries) {
     const isVervoerBenaderd = entry.vervoerBenaderd === 'Ja';
 
     const cardHtml = `
-      <div class="ios-card p-4 space-y-4 border border-slate-100 hover:shadow-md transition-all duration-200">
-        <!-- Deelnemer header -->
-        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-          <div>
-            <div class="font-bold text-slate-800 text-base leading-tight">${entry.naam}</div>
-            <div class="text-xs font-semibold text-indigo-500 mt-0.5">${entry.organisatie}</div>
-          </div>
-          <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-            PB Communicatie
+      <div class="ios-card p-3 space-y-2 border border-slate-100 hover:shadow-md transition-all duration-200">
+        <!-- Top Row: Naam & Organisatie -->
+        <div class="flex justify-between items-center pb-1.5 border-b border-slate-100/60">
+          <div class="flex items-baseline gap-2">
+            <span class="font-bold text-slate-800 text-sm">${entry.naam}</span>
+            <span class="text-[10px] font-semibold text-indigo-500">${entry.organisatie}</span>
           </div>
         </div>
 
-        <!-- Twee kolommen voor Vrijhouden en Vervoer -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Sectie 1: Datum Vrijhouden -->
-          <div class="space-y-2 p-3 bg-indigo-50/40 rounded-xl border border-indigo-100/50">
-            <span class="block text-xs font-bold text-indigo-950 uppercase tracking-wide">1. Datum Vrijhouden</span>
-            <div class="flex items-center gap-2">
-              <!-- Custom Toggle Benaderd -->
-              <button type="button" onclick="window.togglePerformanceField(${index}, 'vrijhouden')" 
-                id="btn-vrijhouden-benaderd-${index}"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-250 ${isVrijBenaderd ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-100' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">
-                <span id="icon-vrijhouden-${index}">${isVrijBenaderd ? '✓' : '✗'}</span>
-                <span>Benaderd</span>
-              </button>
-              <input type="hidden" id="vrijhouden-benaderd-${index}" value="${entry.vrijhoudenBenaderd}">
+        <!-- Controls Row: Vrijhouden & Vervoer side-by-side -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Vrijhouden -->
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="window.togglePerformanceField(${index}, 'vrijhouden')" 
+              id="btn-vrijhouden-benaderd-${index}"
+              class="flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all duration-250 ${isVrijBenaderd ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+              <span id="icon-vrijhouden-${index}">${isVrijBenaderd ? '✓' : '📅'}</span>
+              <span>Benaderd</span>
+            </button>
+            <input type="hidden" id="vrijhouden-benaderd-${index}" value="${entry.vrijhoudenBenaderd}">
 
-              <!-- Status Dropdown -->
-              <select id="vrijhouden-status-${index}" onchange="window.updatePerformanceSelectColor(this)"
-                class="flex-1 rounded-lg text-xs font-semibold p-1.5 outline-none border transition-all duration-200">
-                <option value="Open" ${entry.vrijhoudenStatus === 'Open' ? 'selected' : ''}>Open</option>
-                <option value="OK" ${entry.vrijhoudenStatus === 'OK' ? 'selected' : ''}>OK</option>
-                <option value="NIET OK" ${entry.vrijhoudenStatus === 'NIET OK' ? 'selected' : ''}>NIET OK</option>
-              </select>
-            </div>
+            <select id="vrijhouden-status-${index}" onchange="window.updatePerformanceSelectColor(this)"
+              class="flex-1 rounded-lg text-[10px] font-bold p-1 outline-none border transition-all duration-200">
+              <option value="Open" ${entry.vrijhoudenStatus === 'Open' ? 'selected' : ''}>Open</option>
+              <option value="OK" ${entry.vrijhoudenStatus === 'OK' ? 'selected' : ''}>OK</option>
+              <option value="NIET OK" ${entry.vrijhoudenStatus === 'NIET OK' ? 'selected' : ''}>NIET OK</option>
+            </select>
           </div>
 
-          <!-- Sectie 2: Vervoer Regelen -->
-          <div class="space-y-2 p-3 bg-indigo-50/40 rounded-xl border border-indigo-100/50">
-            <span class="block text-xs font-bold text-indigo-950 uppercase tracking-wide">2. Vervoer Regelen</span>
-            <div class="flex items-center gap-2">
-              <!-- Custom Toggle Benaderd -->
-              <button type="button" onclick="window.togglePerformanceField(${index}, 'vervoer')" 
-                id="btn-vervoer-benaderd-${index}"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-250 ${isVervoerBenaderd ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-100' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">
-                <span id="icon-vervoer-${index}">${isVervoerBenaderd ? '✓' : '✗'}</span>
-                <span>Benaderd</span>
-              </button>
-              <input type="hidden" id="vervoer-benaderd-${index}" value="${entry.vervoerBenaderd}">
+          <!-- Vervoer -->
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="window.togglePerformanceField(${index}, 'vervoer')" 
+              id="btn-vervoer-benaderd-${index}"
+              class="flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all duration-250 ${isVervoerBenaderd ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+              <span id="icon-vervoer-${index}">${isVervoerBenaderd ? '✓' : '🚗'}</span>
+              <span>Vervoer</span>
+            </button>
+            <input type="hidden" id="vervoer-benaderd-${index}" value="${entry.vervoerBenaderd}">
 
-              <!-- Status Dropdown -->
-              <select id="vervoer-status-${index}" onchange="window.updatePerformanceSelectColor(this)"
-                class="flex-1 rounded-lg text-xs font-semibold p-1.5 outline-none border transition-all duration-200">
-                <option value="Open" ${entry.vervoerStatus === 'Open' ? 'selected' : ''}>Open</option>
-                <option value="OK" ${entry.vervoerStatus === 'OK' ? 'selected' : ''}>OK</option>
-                <option value="NIET OK" ${entry.vervoerStatus === 'NIET OK' ? 'selected' : ''}>NIET OK</option>
-              </select>
-            </div>
+            <select id="vervoer-status-${index}" onchange="window.updatePerformanceSelectColor(this)"
+              class="flex-1 rounded-lg text-[10px] font-bold p-1 outline-none border transition-all duration-200">
+              <option value="Open" ${entry.vervoerStatus === 'Open' ? 'selected' : ''}>Open</option>
+              <option value="OK" ${entry.vervoerStatus === 'OK' ? 'selected' : ''}>OK</option>
+              <option value="NIET OK" ${entry.vervoerStatus === 'NIET OK' ? 'selected' : ''}>NIET OK</option>
+            </select>
           </div>
         </div>
 
-        <!-- Opmerkingen veld -->
-        <div class="space-y-1.5">
-          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wide">Eventuele opmerkingen</label>
+        <!-- Opmerkingen Row -->
+        <div>
           <input type="text" id="opmerkingen-${index}" value="${entry.opmerkingen || ''}"
-            placeholder="Bijv. Wacht nog op reactie PB'er, kan alleen heenweg..."
-            class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 rounded-xl p-2.5 outline-none text-xs text-slate-700 focus:ring-2 focus:ring-indigo-100 transition-all duration-200">
+            placeholder="Opmerkingen..."
+            class="w-full bg-slate-50/80 border border-slate-150 hover:border-slate-200 focus:border-indigo-400 rounded-lg p-1.5 outline-none text-[10px] text-slate-700 focus:ring-1 focus:ring-indigo-100 transition-all duration-200">
         </div>
       </div>
     `;
@@ -206,11 +192,11 @@ export function toggleField(index, type) {
   hiddenInput.value = newVal;
 
   if (newVal === 'Ja') {
-    btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-250 bg-indigo-600 text-white shadow-sm shadow-indigo-100";
+    btn.className = "flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all duration-250 bg-indigo-600 text-white shadow-sm shadow-indigo-100";
     icon.innerText = '✓';
   } else {
-    btn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-250 bg-slate-200 text-slate-600 hover:bg-slate-300";
-    icon.innerText = '✗';
+    btn.className = "flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide uppercase transition-all duration-250 bg-slate-100 text-slate-500 hover:bg-slate-200";
+    icon.innerText = type === 'vrijhouden' ? '📅' : '🚗';
   }
 }
 
