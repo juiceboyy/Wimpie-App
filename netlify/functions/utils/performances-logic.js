@@ -2,6 +2,41 @@ const { getSheetData, updateSheetData, clearSheetData } = require('./google');
 const { getParticipants } = require('./sheet-logic');
 
 /**
+ * Converteert een datumtekenreeks van de Google Sheet (bijvoorbeeld DD-MM-YYYY, DD/MM/YYYY of YYYY-MM-DD)
+ * naar het gestandaardiseerde YYYY-MM-DD ISO-formaat voor betrouwbare vergelijkingen.
+ */
+function parseDateToISO(dateStr) {
+  if (!dateStr) return null;
+  const trimmed = String(dateStr).trim();
+  
+  // Als het al YYYY-MM-DD is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Splits op streepjes of slashes
+  const parts = trimmed.split(/[-/]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD / YYYY/MM/DD
+      const y = parts[0];
+      const m = parts[1].padStart(2, '0');
+      const d = parts[2].padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    } else {
+      // DD-MM-YYYY / D-M-YYYY / DD/MM/YYYY
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      if (y.length === 4) {
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+  return trimmed;
+}
+
+/**
  * Haalt de communicatiestatus rondom een optreden op voor alle actieve deelnemers op een specifieke datum.
  * Voegt automatisch standaardwaarden toe voor deelnemers die nog geen status hebben opgeslagen.
  */
@@ -18,14 +53,17 @@ async function getPerformances(datum) {
   // Kolommen: 0: Datum, 1: Deelnemer, 2: Datum Vrijhouden Benaderd, 3: Datum Vrijhouden Status, 4: Vervoer Benaderd, 5: Vervoer Status, 6: Opmerkingen
   const performanceMap = {};
   rows.slice(1).forEach(row => {
-    if (row[0] === datum && row[1]) {
-      performanceMap[row[1]] = {
-        vrijhoudenBenaderd: row[2] || 'Nee',
-        vrijhoudenStatus: row[3] || 'Open',
-        vervoerBenaderd: row[4] || 'Nee',
-        vervoerStatus: row[5] || 'Open',
-        opmerkingen: row[6] || ''
-      };
+    if (row[0] && row[1]) {
+      const rowDate = parseDateToISO(row[0]);
+      if (rowDate === datum) {
+        performanceMap[row[1]] = {
+          vrijhoudenBenaderd: row[2] || 'Nee',
+          vrijhoudenStatus: row[3] || 'Open',
+          vervoerBenaderd: row[4] || 'Nee',
+          vervoerStatus: row[5] || 'Open',
+          opmerkingen: row[6] || ''
+        };
+      }
     }
   });
 
@@ -66,7 +104,10 @@ async function savePerformances(payload) {
 
   // Behoud de header en alle rijen die NIET voor deze datum zijn
   const header = rows[0] || ['Datum', 'Deelnemer', 'Datum Vrijhouden Benaderd', 'Datum Vrijhouden Status', 'Vervoer Benaderd', 'Vervoer Status', 'Opmerkingen'];
-  const otherRows = rows.slice(1).filter(row => row[0] !== datum);
+  const otherRows = rows.slice(1).filter(row => {
+    if (!row[0]) return false;
+    return parseDateToISO(row[0]) !== datum;
+  });
 
   // Map de nieuwe entries naar het juiste sheet-rij-formaat
   const newRows = entries.map(e => [
