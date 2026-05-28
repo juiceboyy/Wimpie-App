@@ -94,10 +94,24 @@
         </div>
 
         <div id="view-performances" class="hidden space-y-4">
-            <div class="ios-card p-4">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum Optreden</label>
-                <input type="date" id="performancesDate"
-                    class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="ios-card p-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Datum Optreden</label>
+                    <input type="date" id="performancesDate"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Naam / Titel van het Optreden</label>
+                    <input type="text" id="performancesTitle" placeholder="Bijv. Optreden Knetemann"
+                        class="w-full bg-slate-100 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+            </div>
+
+            <!-- Eerdere Optredens -->
+            <div id="performancesHistoryContainer" class="hidden ios-card p-4 space-y-2">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Eerdere Optredens</label>
+                <div id="performancesHistoryList" class="flex flex-wrap gap-2">
+                </div>
             </div>
 
             <div id="performancesList" class="space-y-3">

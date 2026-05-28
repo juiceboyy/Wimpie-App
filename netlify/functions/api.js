@@ -3,7 +3,7 @@ const { bookExpenseAndLog } = require('./utils/expense-logic');
 const { getAttendance, getReport, getReportHistory, getParticipants, getExportData, saveRegistration, saveReport } = require('./utils/sheet-logic');
 const { sendExport } = require('./utils/export-logic');
 const { getOpenstaandeFacturen, stuurAanmaning } = require('./utils/aanmaning-logic');
-const { getPerformances, savePerformances } = require('./utils/performances-logic');
+const { getPerformances, savePerformances, getPerformancesHistory } = require('./utils/performances-logic');
 
 const HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -50,6 +50,7 @@ async function handleGet(params) {
     case 'aanmaningen': return jsonResponse(await getOpenstaandeFacturen());
     case 'aanmaningen_debug': return jsonResponse(await getOpenstaandeFacturen({ debug: true }));
     case 'optredens': return jsonResponse(await getPerformances(datum));
+    case 'optredens_historie': return jsonResponse(await getPerformancesHistory());
     default: return jsonResponse(await getParticipants());
   }
 }

@@ -6,6 +6,7 @@ let activePerformances = [];
 
 /**
  * Laadt de optredens voor de geselecteerde datum en rendert ze in de UI.
+ * Haalt tevens de lijst met eerdere optredens op om de badges bij te werken.
  */
 export async function loadPerformancesForDate() {
   const dateInput = document.getElementById('performancesDate');
@@ -23,6 +24,9 @@ export async function loadPerformancesForDate() {
 
   setButtonState('btn-save-performances', 'loading', { text: 'Gegevens ophalen...', disabled: true });
 
+  // Update de lijst van eerdere optredens (geschiedenis) parallel
+  loadPerformancesHistory();
+
   const data = await runSafe(
     () => API.fetchPerformances(datum),
     (e) => {
@@ -32,9 +36,59 @@ export async function loadPerformancesForDate() {
   );
 
   if (data) {
-    activePerformances = data;
-    renderPerformances(data);
+    activePerformances = data.entries || [];
+    
+    // Titel invullen in de UI
+    const titleInput = document.getElementById('performancesTitle');
+    if (titleInput) {
+      titleInput.value = data.titel || '';
+    }
+
+    renderPerformances(activePerformances);
     setButtonState('btn-save-performances', 'default', { text: 'Opslaan', icon: 'save', disabled: false });
+  }
+}
+
+/**
+ * Haalt de unieke eerdere optredens op uit de sheet en rendert ze als klikbare badges.
+ */
+export async function loadPerformancesHistory() {
+  const container = document.getElementById('performancesHistoryContainer');
+  const list = document.getElementById('performancesHistoryList');
+  if (!container || !list) return;
+
+  const history = await runSafe(
+    () => API.fetchPerformancesHistory(),
+    () => { /* Stilzwijgend falen op de achtergrond */ }
+  );
+
+  if (history && history.length > 0) {
+    list.innerHTML = '';
+    container.classList.remove('hidden');
+
+    history.forEach(item => {
+      const parts = item.datum.split('-');
+      const nlDate = `${parts[2]}-${parts[1]}`; // dd-mm formaat
+      const label = item.titel ? `${nlDate} (${item.titel})` : nlDate;
+
+      const badge = document.createElement('button');
+      badge.type = 'button';
+      // Indigo gestijlde badge passend bij het optredens-thema
+      badge.className = "px-3 py-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full text-xs font-semibold text-indigo-700 transition-colors shadow-sm";
+      badge.innerText = label;
+      
+      badge.onclick = () => {
+        const dateInput = document.getElementById('performancesDate');
+        if (dateInput) {
+          dateInput.value = item.datum;
+          loadPerformancesForDate();
+        }
+      };
+
+      list.appendChild(badge);
+    });
+  } else {
+    container.classList.add('hidden');
   }
 }
 
@@ -187,8 +241,10 @@ export function updateSelectColor(selectEl) {
  */
 export async function savePerformances() {
   const dateInput = document.getElementById('performancesDate');
+  const titleInput = document.getElementById('performancesTitle');
   if (!dateInput) return;
   const datum = dateInput.value;
+  const titel = titleInput ? titleInput.value.trim() : '';
   if (!datum) return alert("Selecteer een geldige datum.");
 
   if (activePerformances.length === 0) {
@@ -217,7 +273,7 @@ export async function savePerformances() {
   setButtonState('btn-save-performances', 'loading', { text: 'Bezig met opslaan...', disabled: true });
 
   const result = await runSafe(
-    () => API.postPerformances(datum, entries),
+    () => API.postPerformances(datum, titel, entries),
     (e) => {
       alert("Fout bij opslaan van optredens-communicatie: " + (e.message || e));
       setButtonState('btn-save-performances', 'error', { text: 'Fout bij opslaan', disabled: false });
@@ -227,6 +283,10 @@ export async function savePerformances() {
 
   if (result) {
     setButtonState('btn-save-performances', 'success', { text: 'Succesvol Opgeslagen!' });
+    
+    // Ververs de geschiedenis badges direct na succesvol opslaan
+    loadPerformancesHistory();
+    
     setTimeout(resetBtn, 2000);
   }
 }
