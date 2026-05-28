@@ -229,6 +229,7 @@ async function saveReport() {
         if (result) {
             alert(result.message || 'Succes! Het verslag is verwerkt en verzonden.');
             setButtonState('btn-save-report', 'success', { text: 'Verslag Opgeslagen!' });
+            await loadReportHistory();
         }
     } finally {
         setTimeout(resetBtn, 2000);
