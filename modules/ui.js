@@ -1,5 +1,5 @@
 export function switchTab(tab) {
-    ['presence', 'reports', 'export'].forEach(t => {
+    ['presence', 'reports', 'performances', 'export'].forEach(t => {
         document.getElementById(`view-${t}`).classList.add('hidden');
         document.getElementById(`tab-${t}`).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
         document.getElementById(`tab-${t}`).classList.add('text-slate-500');
@@ -265,6 +265,13 @@ export function setupDynamicUI() {
     if (aiBtn) {
         aiBtn.className = 'mt-3 flex items-center justify-center p-3 w-full border-2 rounded-lg transition-all bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed';
         aiBtn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4 mr-2"></i> AI Verbetering';
+    }
+
+    // 7. Optredens Opslaan (Indigo)
+    const savePerformancesBtn = document.getElementById('btn-save-performances');
+    if (savePerformancesBtn) {
+        savePerformancesBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-semibold';
+        savePerformancesBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan';
     }
 
     if (window.lucide) window.lucide.createIcons();

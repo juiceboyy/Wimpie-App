@@ -7,6 +7,7 @@ import * as State from './modules/state.js';
 import { calculateAndRenderExpenses } from './modules/expenses.js';
 import { controleerAanmaningen } from './modules/aanmaning.js';
 import { runSafe } from './modules/utils.js';
+import { loadPerformancesForDate, savePerformances, toggleField, updateSelectColor } from './modules/performances.js';
 
 let cachedReportHistoryText = "";
 
@@ -19,6 +20,7 @@ function init() {
 
     document.getElementById('presenceDate').valueAsDate = new Date();
     document.getElementById('reportDate').valueAsDate = new Date();
+    document.getElementById('performancesDate').valueAsDate = new Date();
     lucide.createIcons();
     setupDynamicUI();
     fetchParticipants();
@@ -33,6 +35,7 @@ function setupEventListeners() {
         loadExistingReport();
     });
     document.getElementById('reportText').addEventListener('input', validateAIBtn);
+    document.getElementById('performancesDate').addEventListener('change', loadPerformancesForDate);
 }
 
 function validateAIBtn() {
@@ -53,6 +56,9 @@ function exposeGlobals() {
     window.controleerAanmaningen = controleerAanmaningen;
     window.improveReportWithAI = improveReportWithAI;
     window.generateBespokeInvoice = generateBespokeInvoice;
+    window.togglePerformanceField = toggleField;
+    window.updatePerformanceSelectColor = updateSelectColor;
+    window.savePerformances = savePerformances;
 }
 
 async function fetchParticipants() {
@@ -71,6 +77,7 @@ async function fetchParticipants() {
     fillSelect(State.getParticipants());
     document.getElementById('statusIndicator').classList.replace('bg-red-400', 'bg-green-500');
     loadAttendanceForDate();
+    loadPerformancesForDate();
 }
 
 async function loadAttendanceForDate() {
