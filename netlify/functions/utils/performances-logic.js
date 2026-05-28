@@ -145,32 +145,39 @@ async function savePerformances(payload) {
 }
 
 /**
- * Haalt een overzicht op van alle unieke geregistreerde optredens (datum + titel).
- * Gesorteerd op datum (meest recente eerst).
+ * Haalt een overzicht op van alle unieke geregistreerde optredens (datum + titel) die in de toekomst liggen.
+ * Gesorteerd op datum (meest nabije eerst).
  */
 async function getPerformancesHistory() {
   const rows = await getSheetData('Optredens!A:B');
   if (rows.length <= 1) return [];
 
   const uniqueEventsMap = {};
+  
+  // Gestandaardiseerde 'vandaag' string in Europe/Amsterdam tijdzone (YYYY-MM-DD)
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Amsterdam' });
 
   rows.slice(1).forEach(row => {
     const datum = row[0];
     const titel = row[1] || '';
     if (datum) {
       const standardDate = parseDateToISO(datum);
-      // Sla op als we de datum nog niet hebben, of als we een titel vinden voor een datum die we al hadden zonder titel
-      if (!uniqueEventsMap[standardDate] || (titel && !uniqueEventsMap[standardDate].titel)) {
-        uniqueEventsMap[standardDate] = {
-          datum: standardDate,
-          titel: titel
-        };
+      
+      // Filter uit: toon alleen optredens vanaf vandaag (datum >= vandaag)
+      if (standardDate >= todayStr) {
+        // Sla op als we de datum nog niet hebben, of als we een titel vinden voor een datum die we al hadden zonder titel
+        if (!uniqueEventsMap[standardDate] || (titel && !uniqueEventsMap[standardDate].titel)) {
+          uniqueEventsMap[standardDate] = {
+            datum: standardDate,
+            titel: titel
+          };
+        }
       }
     }
   });
 
-  // Converteren naar lijst en sorteren op datum (descending)
-  return Object.values(uniqueEventsMap).sort((a, b) => new Date(b.datum) - new Date(a.datum));
+  // Converteren naar lijst en chronologisch sorteren (meest nabije aankomende optreden eerst)
+  return Object.values(uniqueEventsMap).sort((a, b) => new Date(a.datum) - new Date(b.datum));
 }
 
 module.exports = {

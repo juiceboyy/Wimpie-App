@@ -50,7 +50,7 @@ export async function loadPerformancesForDate() {
 }
 
 /**
- * Haalt de unieke eerdere optredens op uit de sheet en rendert ze als klikbare badges.
+ * Haalt de unieke aankomende optredens op uit de sheet en rendert ze als klikbare badges.
  */
 export async function loadPerformancesHistory() {
   const container = document.getElementById('performancesHistoryContainer');
