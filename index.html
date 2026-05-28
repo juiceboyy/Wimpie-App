@@ -91,6 +91,17 @@
             <button onclick="saveReport()" id="btn-save-report">
                 Verslag Versturen
             </button>
+
+            <!-- Jaarverslag Exporteren Card -->
+            <div id="annualReportCard" class="ios-card p-4 space-y-4 hidden mt-6">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">Jaarverslag Exporteren</h2>
+                    <p class="text-xs text-slate-500">Synthetiseer met behulp van AI alle dagrapportages van het afgelopen jaar tot een professioneel evaluatieverslag voor zorgverleners.</p>
+                </div>
+                <button id="btn-generate-annual-report" onclick="generateAnnualReport()">
+                    Genereer Jaarverslag (Word .doc)
+                </button>
+            </div>
         </div>
 
         <div id="view-performances" class="hidden space-y-4">

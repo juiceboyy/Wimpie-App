@@ -55,6 +55,7 @@ function exposeGlobals() {
     window.calculateExpenses = calculateAndRenderExpenses;
     window.controleerAanmaningen = controleerAanmaningen;
     window.improveReportWithAI = improveReportWithAI;
+    window.generateAnnualReport = generateAnnualReport;
     window.generateBespokeInvoice = generateBespokeInvoice;
     window.togglePerformanceField = toggleField;
     window.updatePerformanceSelectColor = updateSelectColor;
@@ -114,16 +115,19 @@ async function loadReportHistory() {
     const naam = document.getElementById('reportParticipant').value;
     const container = document.getElementById('historyContainer');
     const list = document.getElementById('historyList');
+    const annualCard = document.getElementById('annualReportCard');
 
     cachedReportHistoryText = ""; // Reset cache bij deelnemerwissel
 
     if (naam === 'Selecteer...') {
         container.classList.add('hidden');
+        if (annualCard) annualCard.classList.add('hidden');
         return;
     }
 
     list.innerHTML = '<span class="text-xs text-slate-400">Zoeken...</span>';
     container.classList.remove('hidden');
+    if (annualCard) annualCard.classList.remove('hidden');
 
     const datums = await runSafe(
         () => API.fetchReportHistory(naam),
@@ -262,6 +266,156 @@ async function improveReportWithAI() {
     } else if (result) {
         alert("Onverwacht antwoord van de server, probeer het opnieuw.");
         resetBtn();
+    }
+}
+
+async function generateAnnualReport() {
+    const naam = document.getElementById('reportParticipant').value;
+    if (naam === 'Selecteer...') return alert("Selecteer eerst een deelnemer.");
+
+    const resetBtn = () => setButtonState('btn-generate-annual-report', 'default', { 
+        text: 'Genereer Jaarverslag (Word .doc)', 
+        icon: 'file-text', 
+        disabled: false 
+    });
+
+    setButtonState('btn-generate-annual-report', 'loading', { 
+        text: 'Genereren (dit kan tot 15s duren)...', 
+        disabled: true 
+    });
+
+    try {
+        const result = await runSafe(
+            () => API.generateAnnualReport(naam),
+            (e) => {
+                alert("Fout bij genereren jaarverslag: " + (e.message || e));
+                setButtonState('btn-generate-annual-report', 'error', { text: 'Fout bij genereren', disabled: false });
+            }
+        );
+
+        if (result && result.verslagHTML) {
+            const filename = `Jaarverslag_${naam.replace(/\s+/g, '_')}_${new Date().getFullYear()}.doc`;
+            const participants = State.getParticipants();
+            const participant = participants.find(p => p.naam === naam);
+            const organisatie = participant ? participant.organisatie : "VOF Wimpie & de Domino's";
+
+            // Bouw de volledige Word HTML wrapper met premium opmaak
+            const wordHtml = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                  xmlns:w='urn:schemas-microsoft-com:office:word' 
+                  xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset="utf-8">
+                <title>Jaarverslag ${naam}</title>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        line-height: 1.6;
+                        color: #1e293b;
+                        margin: 2cm;
+                    }
+                    h1 {
+                        color: #1e3a8a;
+                        font-size: 20pt;
+                        margin-bottom: 5pt;
+                        border-bottom: 2px solid #3b82f6;
+                        padding-bottom: 5pt;
+                    }
+                    h3 {
+                        color: #0f172a;
+                        font-size: 14pt;
+                        margin-top: 20pt;
+                        margin-bottom: 10pt;
+                        border-bottom: 1px solid #e2e8f0;
+                        padding-bottom: 3pt;
+                        page-break-after: avoid;
+                    }
+                    p {
+                        font-size: 11pt;
+                        margin-bottom: 10pt;
+                        text-align: justify;
+                    }
+                    ul {
+                        margin-top: 5pt;
+                        margin-bottom: 10pt;
+                        padding-left: 20pt;
+                    }
+                    li {
+                        font-size: 11pt;
+                        margin-bottom: 4pt;
+                    }
+                    strong {
+                        color: #0f172a;
+                    }
+                    .metadata-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 15pt;
+                        margin-bottom: 25pt;
+                        background-color: #f8fafc;
+                    }
+                    .metadata-table td {
+                        padding: 8pt 12pt;
+                        border: 1px solid #e2e8f0;
+                        font-size: 10pt;
+                    }
+                    .metadata-table td.label {
+                        font-weight: bold;
+                        width: 30%;
+                        color: #475569;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Jaarverslag Muzikale Dagbesteding</h1>
+                
+                <table class="metadata-table">
+                    <tr>
+                        <td class="label">Deelnemer:</td>
+                        <td>${naam}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Organisatie:</td>
+                        <td>${organisatie}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Zorginstelling:</td>
+                        <td>VOF Wimpie & de Domino's</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Datum opgesteld:</td>
+                        <td>${result.datum}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Aantal geanalyseerde dagrapportages:</td>
+                        <td>${result.aantalVerslagen} verslagen</td>
+                    </tr>
+                </table>
+
+                ${result.verslagHTML}
+            </body>
+            </html>`;
+
+            const blob = new Blob(['\ufeff' + wordHtml], {
+                type: 'application/msword;charset=utf-8'
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            setButtonState('btn-generate-annual-report', 'success', { text: 'Jaarverslag Gedownload!', disabled: false });
+            setTimeout(resetBtn, 3000);
+        }
+    } catch (err) {
+        console.error("Fout in download jaarverslag:", err);
+        setButtonState('btn-generate-annual-report', 'error', { text: 'Fout bij opslaan', disabled: false });
+        setTimeout(resetBtn, 3000);
     }
 }
 
