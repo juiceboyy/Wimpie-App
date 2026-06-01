@@ -274,6 +274,13 @@ export function setupDynamicUI() {
         savePerformancesBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5 mr-3"></i> Opslaan';
     }
 
+    // 8. Jaarverslag Exporteren (Violet)
+    const annualReportBtn = document.getElementById('btn-generate-annual-report');
+    if (annualReportBtn) {
+        annualReportBtn.className = 'flex items-center justify-center p-4 w-full border-2 rounded-lg transition-all bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100 font-semibold';
+        annualReportBtn.innerHTML = '<i data-lucide="file-text" class="w-5 h-5 mr-3"></i> Genereer Jaarverslag (Word .doc)';
+    }
+
     if (window.lucide) window.lucide.createIcons();
 }
 

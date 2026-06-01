@@ -107,6 +107,19 @@ export async function improveReportWithAI(naam, steekwoorden, historie) {
     return response.json();
 }
 
+export async function generateAnnualReport(naam) {
+    const response = await fetch('/.netlify/functions/annual-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ naam })
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Server error bij genereren jaarverslag');
+    }
+    return response.json();
+}
+
 export async function fetchPerformances(date) {
     const response = await fetch(`${SCRIPT_URL}?type=optredens&datum=${date}`);
     if (!response.ok) throw new Error('API gaf een error: ' + response.status);
