@@ -10,8 +10,8 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   const currentQuarter = Math.ceil(currentMonth / 3);
   const targetSheet = `Q${currentQuarter} Verkoop`;
 
-  // 1. Haal NU Kolom B (Factuurnummers) op uit ALLE Verkoop tabbladen
-  const ranges = ['Q1 Verkoop!B:B', 'Q2 Verkoop!B:B', 'Q3 Verkoop!B:B', 'Q4 Verkoop!B:B'];
+  // 1. Haal NU Kolom A t/m C (Datum, Factuurnummer, Omschrijving) op uit ALLE Verkoop tabbladen
+  const ranges = ['Q1 Verkoop!A:C', 'Q2 Verkoop!A:C', 'Q3 Verkoop!A:C', 'Q4 Verkoop!A:C'];
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges,
@@ -20,12 +20,18 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   let maxNumber = 0;
   const valueRanges = response.data.valueRanges || [];
 
-  // 2. Zoek het hoogste volgnummer
+  // 2. Zoek het hoogste volgnummer (alleen bij rijen met een datum én omschrijving)
   valueRanges.forEach(vr => {
     if (vr.values) {
       vr.values.forEach(row => {
-        const invoiceStr = row[0]; // row[0] is hier kolom B, omdat we alleen B ophalen
-        if (invoiceStr && invoiceStr.startsWith(`${currentYear}.`)) {
+        const datum = row[0] ? String(row[0]).trim() : '';
+        const invoiceStr = row[1] ? String(row[1]).trim() : '';
+        const omschrijving = row[2] ? String(row[2]).trim() : '';
+
+        const hasDatum = datum !== '';
+        const hasOmschrijving = omschrijving !== '';
+
+        if (invoiceStr && invoiceStr.startsWith(`${currentYear}.`) && hasDatum && hasOmschrijving) {
           const numPart = parseInt(invoiceStr.split('.')[1], 10);
           if (!isNaN(numPart) && numPart > maxNumber) {
             maxNumber = numPart;
@@ -39,12 +45,21 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
   const newFactuurNummer = `${currentYear}.${newNumberStr}`;
 
-  // 4. Bepaal de EXACTE lege rij voor het huidige kwartaal
+  // 4. Bepaal de EXACTE lege of voorgeprogrammeerde rij voor het huidige kwartaal
   const currentQuarterIndex = currentQuarter - 1;
   const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
-  // Als de lijst 3 rijen lang is (1 header, 2 facturen), moet de volgende op rij 4.
-  // Als de lijst leeg is (lengte 0), beginnen we op rij 2.
-  const nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+  
+  let nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+
+  // Zoek of het nieuw berekende factuurnummer al gereserveerd is in een rij
+  const existingRowIndex = currentQuarterData.findIndex(row => {
+    const invoiceStr = row[1] ? String(row[1]).trim() : '';
+    return invoiceStr === newFactuurNummer;
+  });
+
+  if (existingRowIndex !== -1) {
+    nextRow = existingRowIndex + 1; // Google Sheets is 1-indexed, en index 0 is rij 1 (header)
+  }
 
   // 5. Maak de nieuwe rij op met de 12-koloms indeling
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
