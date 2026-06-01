@@ -1,6 +1,21 @@
 const { google } = require('googleapis');
 const { auth } = require('./google');
 
+/**
+ * Normaliseert en ontleedt een factuur-/bonnummer in jaar (4 cijfers) en volgnummer.
+ * Werkt betrouwbaar met duizendtal-separatoren (bijv. 2.026.015), komma's, spaties en ongepadde invoer.
+ */
+function parseInvoiceString(str) {
+  if (!str) return null;
+  const digits = String(str).replace(/\D/g, '');
+  if (digits.length >= 5) {
+    const year = digits.substring(0, 4);
+    const seq = parseInt(digits.substring(4), 10);
+    return { year, seq };
+  }
+  return null;
+}
+
 async function bookExpenseAndLog(omschrijving, bedrag) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
@@ -10,8 +25,8 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
   const currentQuarter = Math.ceil(currentMonth / 3);
   const targetSheet = `Q${currentQuarter} Inkoop`;
 
-  // 1. Haal NU Kolom B (Bonnummers) op uit ALLE Inkoop tabbladen
-  const ranges = ['Q1 Inkoop!B:B', 'Q2 Inkoop!B:B', 'Q3 Inkoop!B:B', 'Q4 Inkoop!B:B'];
+  // 1. Haal NU Kolom A t/m C (Datum, Bonnummer, Omschrijving) op uit ALLE Inkoop tabbladen
+  const ranges = ['Q1 Inkoop!A:C', 'Q2 Inkoop!A:C', 'Q3 Inkoop!A:C', 'Q4 Inkoop!A:C'];
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges,
@@ -20,15 +35,23 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
   let maxNumber = 0;
   const valueRanges = response.data.valueRanges || [];
 
-  // 2. Zoek het hoogste volgnummer
+  // 2. Zoek het hoogste volgnummer (alleen bij rijen met een datum én omschrijving)
   valueRanges.forEach(vr => {
     if (vr.values) {
       vr.values.forEach(row => {
-        const bonStr = row[0]; // row[0] is hier kolom B, omdat we alleen B ophalen
-        if (bonStr && bonStr.startsWith(`${currentYear}.`)) {
-          const numPart = parseInt(bonStr.split('.')[1], 10);
-          if (!isNaN(numPart) && numPart > maxNumber) {
-            maxNumber = numPart;
+        const datum = row[0] ? String(row[0]).trim() : '';
+        const bonStr = row[1] ? String(row[1]).trim() : '';
+        const omschrijvingVal = row[2] ? String(row[2]).trim() : '';
+
+        const hasDatum = datum !== '';
+        const hasOmschrijving = omschrijvingVal !== '';
+
+        if (hasDatum && hasOmschrijving) {
+          const parsed = parseInvoiceString(bonStr);
+          if (parsed && parsed.year === currentYear) {
+            if (parsed.seq > maxNumber) {
+              maxNumber = parsed.seq;
+            }
           }
         }
       });
@@ -39,12 +62,23 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
   const newBonNummer = `${currentYear}.${newNumberStr}`;
 
-  // 4. Bepaal de EXACTE lege rij voor het huidige kwartaal
+  // 4. Bepaal de EXACTE lege of voorgeprogrammeerde rij voor het huidige kwartaal
   const currentQuarterIndex = currentQuarter - 1;
   const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
-  // Als de lijst items heeft (1 header is lengte 1), tellen we dat en doen we + 1 = volgende regel.
-  // Is de lijst leeg, starten we op rij 2.
-  const nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+  
+  let nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+
+  // Zoek of het nieuw berekende bonnummer al gereserveerd is in een rij
+  const targetParsed = parseInvoiceString(newBonNummer);
+  const existingRowIndex = currentQuarterData.findIndex(row => {
+    const bonStr = row[1] ? String(row[1]).trim() : '';
+    const parsed = parseInvoiceString(bonStr);
+    return parsed && targetParsed && parsed.year === targetParsed.year && parsed.seq === targetParsed.seq;
+  });
+
+  if (existingRowIndex !== -1) {
+    nextRow = existingRowIndex + 1; // Google Sheets is 1-indexed, en index 0 is rij 1 (header)
+  }
 
   // 5. Maak de nieuwe rij op met de gevraagde opmaak
   const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
