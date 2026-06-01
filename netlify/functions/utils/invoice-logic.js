@@ -1,6 +1,21 @@
 const { google } = require('googleapis');
 const { auth } = require('./google');
 
+/**
+ * Normaliseert en ontleedt een factuurnummer in jaar (4 cijfers) en volgnummer.
+ * Werkt betrouwbaar met duizendtal-separatoren (bijv. 2.026.045), komma's, spaties en ongepadde invoer.
+ */
+function parseInvoiceString(str) {
+  if (!str) return null;
+  const digits = String(str).replace(/\D/g, '');
+  if (digits.length >= 5) {
+    const year = digits.substring(0, 4);
+    const seq = parseInt(digits.substring(4), 10);
+    return { year, seq };
+  }
+  return null;
+}
+
 async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
@@ -31,10 +46,12 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
         const hasDatum = datum !== '';
         const hasOmschrijving = omschrijving !== '';
 
-        if (invoiceStr && invoiceStr.startsWith(`${currentYear}.`) && hasDatum && hasOmschrijving) {
-          const numPart = parseInt(invoiceStr.split('.')[1], 10);
-          if (!isNaN(numPart) && numPart > maxNumber) {
-            maxNumber = numPart;
+        if (hasDatum && hasOmschrijving) {
+          const parsed = parseInvoiceString(invoiceStr);
+          if (parsed && parsed.year === currentYear) {
+            if (parsed.seq > maxNumber) {
+              maxNumber = parsed.seq;
+            }
           }
         }
       });
@@ -52,9 +69,11 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   let nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
 
   // Zoek of het nieuw berekende factuurnummer al gereserveerd is in een rij
+  const targetParsed = parseInvoiceString(newFactuurNummer);
   const existingRowIndex = currentQuarterData.findIndex(row => {
     const invoiceStr = row[1] ? String(row[1]).trim() : '';
-    return invoiceStr === newFactuurNummer;
+    const parsed = parseInvoiceString(invoiceStr);
+    return parsed && targetParsed && parsed.year === targetParsed.year && parsed.seq === targetParsed.seq;
   });
 
   if (existingRowIndex !== -1) {
