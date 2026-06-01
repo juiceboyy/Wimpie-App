@@ -62,11 +62,18 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
   const newFactuurNummer = `${currentYear}.${newNumberStr}`;
 
-  // 4. Bepaal de EXACTE lege of voorgeprogrammeerde rij voor het huidige kwartaal
+  // 4. Bepaal de EXACTE lege rij voor het huidige kwartaal (vlak na de laatste factuur)
   const currentQuarterIndex = currentQuarter - 1;
   const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
   
-  let nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
+  let lastInvoiceIndex = -1;
+  for (let i = 0; i < currentQuarterData.length; i++) {
+    const val = currentQuarterData[i] && currentQuarterData[i][1];
+    if (val && /^\d{4}\.\d+$/.test(val.toString().trim())) {
+      lastInvoiceIndex = i;
+    }
+  }
+  let nextRow = lastInvoiceIndex > -1 ? lastInvoiceIndex + 2 : 2;
 
   // Zoek of het nieuw berekende factuurnummer al gereserveerd is in een rij
   const targetParsed = parseInvoiceString(newFactuurNummer);
