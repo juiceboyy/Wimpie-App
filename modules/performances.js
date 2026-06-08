@@ -155,6 +155,7 @@ function renderPerformances(entries) {
             <select id="vervoer-status-${index}" onchange="window.updatePerformanceSelectColor(this)"
               class="flex-1 rounded-lg text-[10px] font-bold p-1 outline-none border transition-all duration-200">
               <option value="Open" ${entry.vervoerStatus === 'Open' ? 'selected' : ''}>Open</option>
+              <option value="Sent" ${entry.vervoerStatus === 'Sent' ? 'selected' : ''}>Sent</option>
               <option value="OK" ${entry.vervoerStatus === 'OK' ? 'selected' : ''}>OK</option>
               <option value="NIET OK" ${entry.vervoerStatus === 'NIET OK' ? 'selected' : ''}>NIET OK</option>
             </select>
@@ -210,13 +211,16 @@ export function updateSelectColor(selectEl) {
   selectEl.classList.remove(
     'bg-emerald-50', 'text-emerald-700', 'border-emerald-200',
     'bg-rose-50', 'text-rose-700', 'border-rose-200',
-    'bg-slate-50', 'text-slate-600', 'border-slate-200'
+    'bg-slate-50', 'text-slate-600', 'border-slate-200',
+    'bg-blue-50', 'text-blue-700', 'border-blue-200'
   );
 
   if (val === 'OK') {
     selectEl.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
   } else if (val === 'NIET OK') {
     selectEl.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200');
+  } else if (val === 'Sent') {
+    selectEl.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
   } else {
     selectEl.classList.add('bg-slate-50', 'text-slate-600', 'border-slate-200');
   }
