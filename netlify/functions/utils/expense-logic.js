@@ -19,14 +19,18 @@ function parseInvoiceString(str) {
 async function bookExpenseAndLog(omschrijving, bedrag) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
-  const spreadsheetId = '1ygzfQoR19DjWF4-pDYOmT3GT-DkQRNk52S5lBWFuVP0'; // Zelfde ID als bij invoice-logic
-  const currentYear = new Date().getFullYear().toString();
-  const currentMonth = new Date().getMonth() + 1;
-  const currentQuarter = Math.ceil(currentMonth / 3);
-  const targetSheet = `Q${currentQuarter} Inkoop`;
+  const spreadsheetId = '1ygzfQoR19DjWF4-pDYOmT3GT-DkQRNk52S5lBWFuVP0';
 
-  // 1. Haal NU Kolom A t/m C (Datum, Bonnummer, Omschrijving) op uit ALLE Inkoop tabbladen
-  const ranges = ['Q1 Inkoop!A:C', 'Q2 Inkoop!A:C', 'Q3 Inkoop!A:C', 'Q4 Inkoop!A:C'];
+  // Bon wordt altijd geboekt op de betaaldatum (de huidige datum / het huidige kwartaal)
+  const now = new Date();
+  const targetYear = now.getFullYear().toString();
+  const targetQuarter = Math.ceil((now.getMonth() + 1) / 3);
+  const datum = now.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const targetSheet = `Q${targetQuarter} Inkoop`;
+
+  // 1. Haal Kolom A t/m G op uit ALLE Inkoop tabbladen
+  const ranges = ['Q1 Inkoop!A:G', 'Q2 Inkoop!A:G', 'Q3 Inkoop!A:G', 'Q4 Inkoop!A:G'];
   const response = await sheets.spreadsheets.values.batchGet({
     spreadsheetId,
     ranges,
@@ -39,16 +43,16 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
   valueRanges.forEach(vr => {
     if (vr.values) {
       vr.values.forEach(row => {
-        const datum = row[0] ? String(row[0]).trim() : '';
+        const datumVal = row[0] ? String(row[0]).trim() : '';
         const bonStr = row[1] ? String(row[1]).trim() : '';
         const omschrijvingVal = row[2] ? String(row[2]).trim() : '';
 
-        const hasDatum = datum !== '';
+        const hasDatum = datumVal !== '';
         const hasOmschrijving = omschrijvingVal !== '';
 
         if (hasDatum && hasOmschrijving) {
           const parsed = parseInvoiceString(bonStr);
-          if (parsed && parsed.year === currentYear) {
+          if (parsed && parsed.year === targetYear) {
             if (parsed.seq > maxNumber) {
               maxNumber = parsed.seq;
             }
@@ -60,37 +64,119 @@ async function bookExpenseAndLog(omschrijving, bedrag) {
 
   // 3. Bereken het nieuwe nummer
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
-  const newBonNummer = `${currentYear}.${newNumberStr}`;
+  const newBonNummer = `${targetYear}.${newNumberStr}`;
 
-  // 4. Bepaal de EXACTE lege of voorgeprogrammeerde rij voor het huidige kwartaal
-  const currentQuarterIndex = currentQuarter - 1;
+  // 4. Bepaal de EXACTE lege rij voor het doelkwartaal (altijd VÓÓR de Totalen-rij)
+  const currentQuarterIndex = targetQuarter - 1;
   const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
-  
-  let nextRow = currentQuarterData.length > 0 ? currentQuarterData.length + 1 : 2;
 
-  // Zoek of het nieuw berekende bonnummer al gereserveerd is in een rij
+  // Zoek waar de 'Totalen' rij staat
+  let totalenIndex = currentQuarterData.findIndex(row => {
+    if (!row) return false;
+    const colA = row[0] ? String(row[0]).trim().toLowerCase() : '';
+    const colC = row[2] ? String(row[2]).trim().toLowerCase() : '';
+    return colA.startsWith('totaal') || colC.startsWith('totaal');
+  });
+
+  if (totalenIndex === -1) {
+    totalenIndex = currentQuarterData.length > 0 ? currentQuarterData.length : 20;
+  }
+
+  // Controleer of er rijen per ongeluk onder de Totalen-rij staan en verplaats ze naar de lege rijen erboven
+  if (currentQuarterData.length > totalenIndex + 1) {
+    for (let i = totalenIndex + 1; i < currentQuarterData.length; i++) {
+      const row = currentQuarterData[i];
+      if (!row) continue;
+      const dVal = row[0] ? String(row[0]).trim() : '';
+      const bVal = row[1] ? String(row[1]).trim() : '';
+      const oVal = row[2] ? String(row[2]).trim() : '';
+      const parsed = parseInvoiceString(bVal);
+
+      if (dVal && parsed && oVal) {
+        // Zoek eerste vrije plek boven Totalen (rij 2 t/m totalenIndex)
+        let slotIndex = -1;
+        for (let s = 1; s < totalenIndex; s++) {
+          const sRow = currentQuarterData[s] || [];
+          if (!sRow[0] && !sRow[1] && !sRow[2]) {
+            slotIndex = s;
+            break;
+          }
+        }
+
+        if (slotIndex !== -1) {
+          const targetRowNumber = slotIndex + 1;
+          const oldRowNumber = i + 1;
+
+          const rowToMove = [
+            dVal,
+            bVal,
+            oVal,
+            row[3] || 'RK Parochie Emmaus',
+            row[4] || '',
+            row[5] || '',
+            row[6] || row[4] || ''
+          ];
+
+          await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `${targetSheet}!A${targetRowNumber}:G${targetRowNumber}`,
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: [rowToMove] }
+          });
+
+          await sheets.spreadsheets.values.clear({
+            spreadsheetId,
+            range: `${targetSheet}!A${oldRowNumber}:G${oldRowNumber}`
+          });
+
+          currentQuarterData[slotIndex] = rowToMove;
+          currentQuarterData[i] = [];
+        }
+      }
+    }
+  }
+
+  // Zoek of het nieuw berekende bonnummer al gereserveerd is vóór de Totalen-rij
   const targetParsed = parseInvoiceString(newBonNummer);
-  const existingRowIndex = currentQuarterData.findIndex(row => {
+  let nextRow = null;
+
+  const existingRowIndex = currentQuarterData.slice(0, totalenIndex).findIndex(row => {
+    if (!row) return false;
     const bonStr = row[1] ? String(row[1]).trim() : '';
     const parsed = parseInvoiceString(bonStr);
     return parsed && targetParsed && parsed.year === targetParsed.year && parsed.seq === targetParsed.seq;
   });
 
   if (existingRowIndex !== -1) {
-    nextRow = existingRowIndex + 1; // Google Sheets is 1-indexed, en index 0 is rij 1 (header)
+    nextRow = existingRowIndex + 1;
+  } else {
+    // Zoek de eerste vrije rij tussen rij 2 en de Totalen-rij
+    for (let i = 1; i < totalenIndex; i++) {
+      const row = currentQuarterData[i] || [];
+      const datumVal = row[0] ? String(row[0]).trim() : '';
+      const bonVal = row[1] ? String(row[1]).trim() : '';
+      const omschrijvingVal = row[2] ? String(row[2]).trim() : '';
+
+      if (!datumVal && !bonVal && !omschrijvingVal) {
+        nextRow = i + 1;
+        break;
+      }
+    }
+
+    if (!nextRow) {
+      nextRow = totalenIndex; // Fallback als alles vol is net voor de Totalen rij
+    }
   }
 
-  // 5. Maak de nieuwe rij op met de gevraagde opmaak
-  const datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
+  // 5. Maak de nieuwe rij op met de 7-koloms indeling
   const rowData = [
     datum,                // Kolom A: Datum
-    newBonNummer,         // Kolom B: Bonnummer (bv 2026.001)
+    newBonNummer,         // Kolom B: Bonnummer (bv 2026.021)
     omschrijving,         // Kolom C: Omschrijving
     "RK Parochie Emmaus", // Kolom D: Leverancier
-    bedrag,               // Kolom E: Totaalbedrag
+    bedrag,               // Kolom E: Factuurbedrag
     '',                   // Kolom F: Lege string (BTW)
-    bedrag                // Kolom G: Totaalbedrag
+    bedrag                // Kolom G: Vergoeding
   ];
 
   // 6. Schrijf de nieuwe bon weg via UPDATE (Sniper methode)

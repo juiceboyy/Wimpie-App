@@ -62,22 +62,28 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
   const newNumberStr = (maxNumber + 1).toString().padStart(3, '0');
   const newFactuurNummer = `${currentYear}.${newNumberStr}`;
 
-  // 4. Bepaal de EXACTE lege rij voor het huidige kwartaal (vlak na de laatste factuur)
+  // 4. Bepaal de EXACTE lege rij voor het doelkwartaal (altijd VÓÓR de Totalen-rij)
   const currentQuarterIndex = currentQuarter - 1;
   const currentQuarterData = valueRanges[currentQuarterIndex] ? valueRanges[currentQuarterIndex].values || [] : [];
   
-  let lastInvoiceIndex = -1;
-  for (let i = 0; i < currentQuarterData.length; i++) {
-    const val = currentQuarterData[i] && currentQuarterData[i][1];
-    if (val && /^\d{4}\.\d+$/.test(val.toString().trim())) {
-      lastInvoiceIndex = i;
-    }
-  }
-  let nextRow = lastInvoiceIndex > -1 ? lastInvoiceIndex + 2 : 2;
+  // Zoek waar de 'Totalen' rij staat
+  let totalenIndex = currentQuarterData.findIndex(row => {
+    if (!row) return false;
+    const colA = row[0] ? String(row[0]).trim().toLowerCase() : '';
+    const colC = row[2] ? String(row[2]).trim().toLowerCase() : '';
+    return colA.startsWith('totaal') || colC.startsWith('totaal');
+  });
 
-  // Zoek of het nieuw berekende factuurnummer al gereserveerd is in een rij
+  if (totalenIndex === -1) {
+    totalenIndex = currentQuarterData.length > 0 ? currentQuarterData.length : 20;
+  }
+
+  // Zoek of het nieuw berekende factuurnummer al gereserveerd is vóór de Totalen-rij
   const targetParsed = parseInvoiceString(newFactuurNummer);
-  const existingRowIndex = currentQuarterData.findIndex(row => {
+  let nextRow = null;
+
+  const existingRowIndex = currentQuarterData.slice(0, totalenIndex).findIndex(row => {
+    if (!row) return false;
     const invoiceStr = row[1] ? String(row[1]).trim() : '';
     const parsed = parseInvoiceString(invoiceStr);
     return parsed && targetParsed && parsed.year === targetParsed.year && parsed.seq === targetParsed.seq;
@@ -85,6 +91,23 @@ async function getNextInvoiceNumberAndLog(organisatie, bedrag, omschrijvingInput
 
   if (existingRowIndex !== -1) {
     nextRow = existingRowIndex + 1; // Google Sheets is 1-indexed, en index 0 is rij 1 (header)
+  } else {
+    // Zoek de eerste vrije rij tussen rij 2 en de Totalen-rij
+    for (let i = 1; i < totalenIndex; i++) {
+      const row = currentQuarterData[i] || [];
+      const datumVal = row[0] ? String(row[0]).trim() : '';
+      const invoiceVal = row[1] ? String(row[1]).trim() : '';
+      const omschrijvingVal = row[2] ? String(row[2]).trim() : '';
+
+      if (!datumVal && !invoiceVal && !omschrijvingVal) {
+        nextRow = i + 1;
+        break;
+      }
+    }
+
+    if (!nextRow) {
+      nextRow = totalenIndex; // Fallback als alles vol is net voor de Totalen rij
+    }
   }
 
   // 5. Maak de nieuwe rij op met de 12-koloms indeling
