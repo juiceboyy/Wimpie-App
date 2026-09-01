@@ -72,7 +72,7 @@ async function handlePost(payload) {
       }
     case 'book_expense':
       try {
-        const bonnummer = await bookExpenseAndLog(payload.omschrijving, payload.bedrag, payload.maand);
+        const bonnummer = await bookExpenseAndLog(payload.omschrijving, payload.bedrag);
         return jsonResponse({ success: true, bonnummer: bonnummer });
       } catch (error) {
         console.error("Fout bij boeken uitgave:", error);

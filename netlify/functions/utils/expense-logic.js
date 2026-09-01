@@ -16,23 +16,16 @@ function parseInvoiceString(str) {
   return null;
 }
 
-async function bookExpenseAndLog(omschrijving, bedrag, maandInput) {
+async function bookExpenseAndLog(omschrijving, bedrag) {
   const authClient = await auth.getClient();
   const sheets = google.sheets({ version: 'v4', auth: authClient });
   const spreadsheetId = '1ygzfQoR19DjWF4-pDYOmT3GT-DkQRNk52S5lBWFuVP0';
 
-  let targetYear = new Date().getFullYear().toString();
-  let targetQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
-  let datum = new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-  if (maandInput && /^\d{4}-\d{2}$/.test(maandInput)) {
-    const [y, m] = maandInput.split('-');
-    targetYear = y;
-    const mNum = parseInt(m, 10);
-    targetQuarter = Math.ceil(mNum / 3);
-    const lastDay = new Date(parseInt(y, 10), mNum, 0).getDate();
-    datum = `${String(lastDay).padStart(2, '0')}-${String(mNum).padStart(2, '0')}-${y}`;
-  }
+  // Bon wordt altijd geboekt op de betaaldatum (de huidige datum / het huidige kwartaal)
+  const now = new Date();
+  const targetYear = now.getFullYear().toString();
+  const targetQuarter = Math.ceil((now.getMonth() + 1) / 3);
+  const datum = now.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const targetSheet = `Q${targetQuarter} Inkoop`;
 
