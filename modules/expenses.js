@@ -38,7 +38,7 @@ export async function calculateAndRenderExpenses() {
             omschrijving,
             onBookCallback: async () => {
                 return await runSafe(
-                    () => API.bookExpense(omschrijving, totalAmount),
+                    () => API.bookExpense(omschrijving, totalAmount, maandInput),
                     (e) => { alert("Fout bij boeken: " + e.message); }
                 );
             }

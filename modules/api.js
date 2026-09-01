@@ -69,10 +69,10 @@ export async function fetchInvoiceNumber(organisatie, bedrag, omschrijving) {
     return result.invoiceNumber;
 }
 
-export async function bookExpense(omschrijving, bedrag) {
+export async function bookExpense(omschrijving, bedrag, maand) {
     const response = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ type: 'book_expense', omschrijving, bedrag })
+        body: JSON.stringify({ type: 'book_expense', omschrijving, bedrag, maand })
     });
     const result = await response.json();
     if (result.error) throw new Error(result.error);
