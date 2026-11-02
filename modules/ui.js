@@ -117,7 +117,7 @@ export function renderHistoryList(datums, onSelectCallback) {
     });
 
     const totalUniqueMonths = yearKeys.reduce((acc, y) => acc + years[y].monthKeys.length, 0);
-    const useYearHierarchy = yearKeys.length > 1 || totalUniqueMonths > 10;
+    const useYearHierarchy = yearKeys.length > 1 || totalUniqueMonths > 6;
 
     const createBadge = (d) => {
         const delen = d.split('-');
