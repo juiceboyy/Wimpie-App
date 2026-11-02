@@ -74,7 +74,10 @@ export function renderHistoryList(datums, onSelectCallback) {
     if (datums.length === 0) {
         list.className = "flex flex-wrap gap-2";
         list.innerHTML = '<span class="text-xs text-slate-400">Nog geen verslagen.</span>';
-    } else if (datums.length <= 10) {
+        return;
+    }
+
+    if (datums.length <= 10) {
         list.className = "flex flex-wrap gap-2";
         datums.forEach(d => {
             const delen = d.split('-');
@@ -86,102 +89,126 @@ export function renderHistoryList(datums, onSelectCallback) {
             badge.onclick = () => onSelectCallback(d);
             list.appendChild(badge);
         });
-    } else {
-        list.className = "space-y-4 w-full";
+        return;
+    }
 
-        const uniqueMonths = new Set(datums.map(d => d.substring(0, 7))); // 'YYYY-MM'
-        const useYearGrouping = uniqueMonths.size > 10;
+    list.className = "space-y-4 w-full";
 
-        const groups = {};
-        const groupKeys = [];
+    const monthNames = {
+        '01': 'Januari', '02': 'Februari', '03': 'Maart', '04': 'April',
+        '05': 'Mei', '06': 'Juni', '07': 'Juli', '08': 'Augustus',
+        '09': 'September', '10': 'Oktober', '11': 'November', '12': 'December'
+    };
 
-        if (useYearGrouping) {
-            datums.forEach(d => {
-                const delen = d.split('-');
-                const year = delen[0];
-                const groupKey = year;
+    const years = {};
+    const yearKeys = [];
 
-                if (!groups[groupKey]) {
-                    groups[groupKey] = [];
-                    groupKeys.push(groupKey);
-                }
-                groups[groupKey].push(d);
-            });
-        } else {
-            const monthNames = {
-                '01': 'Januari',
-                '02': 'Februari',
-                '03': 'Maart',
-                '04': 'April',
-                '05': 'Mei',
-                '06': 'Juni',
-                '07': 'Juli',
-                '08': 'Augustus',
-                '09': 'September',
-                '10': 'Oktober',
-                '11': 'November',
-                '12': 'December'
-            };
-
-            datums.forEach(d => {
-                const delen = d.split('-');
-                const year = delen[0];
-                const month = delen[1];
-                const monthName = monthNames[month] || month;
-                const groupKey = `${monthName} ${year}`;
-
-                if (!groups[groupKey]) {
-                    groups[groupKey] = [];
-                    groupKeys.push(groupKey);
-                }
-                groups[groupKey].push(d);
-            });
+    datums.forEach(d => {
+        const [year, month] = d.split('-');
+        if (!years[year]) {
+            years[year] = { months: {}, monthKeys: [] };
+            yearKeys.push(year);
         }
+        if (!years[year].months[month]) {
+            years[year].months[month] = [];
+            years[year].monthKeys.push(month);
+        }
+        years[year].months[month].push(d);
+    });
 
-        groupKeys.forEach(groupKey => {
+    const totalUniqueMonths = yearKeys.reduce((acc, y) => acc + years[y].monthKeys.length, 0);
+    const useYearHierarchy = yearKeys.length > 1 || totalUniqueMonths > 10;
+
+    const createBadge = (d) => {
+        const delen = d.split('-');
+        const nlDatum = `${delen[2]}-${delen[1]}`;
+        const badge = document.createElement('button');
+        badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
+        badge.innerText = nlDatum;
+        badge.onclick = () => onSelectCallback(d);
+        return badge;
+    };
+
+    const attachToggle = (header, targetContainer, iconSelector) => {
+        header.onclick = () => {
+            const isHidden = targetContainer.classList.toggle('hidden');
+            const icon = header.querySelector(iconSelector);
+            if (icon) {
+                icon.classList.toggle('rotate-90', !isHidden);
+            }
+        };
+    };
+
+    if (useYearHierarchy) {
+        yearKeys.forEach(year => {
+            const yearSection = document.createElement('div');
+            yearSection.className = "space-y-2";
+
+            const yearHeader = document.createElement('div');
+            yearHeader.className = "flex items-center gap-1.5 cursor-pointer select-none text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors mt-1 py-1 w-fit";
+            yearHeader.innerHTML = `
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform duration-200"></i>
+                <span class="tracking-wider uppercase">${year}</span>
+            `;
+
+            const monthsContainer = document.createElement('div');
+            monthsContainer.className = "space-y-3 pl-3 border-l-2 border-slate-100 hidden";
+            attachToggle(yearHeader, monthsContainer, '[data-lucide="chevron-right"]');
+
+            years[year].monthKeys.forEach(month => {
+                const monthSection = document.createElement('div');
+                monthSection.className = "space-y-1.5";
+
+                const monthName = monthNames[month] || month;
+                const monthHeader = document.createElement('div');
+                monthHeader.className = "flex items-center gap-1.5 cursor-pointer select-none text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors py-0.5 w-fit";
+                monthHeader.innerHTML = `
+                    <i data-lucide="chevron-right" class="w-3 h-3 transition-transform duration-200"></i>
+                    <span class="tracking-wider uppercase">${monthName}</span>
+                `;
+
+                const badgesContainer = document.createElement('div');
+                badgesContainer.className = "flex flex-wrap gap-2 pl-4 hidden";
+                attachToggle(monthHeader, badgesContainer, '[data-lucide="chevron-right"]');
+
+                years[year].months[month].forEach(d => badgesContainer.appendChild(createBadge(d)));
+
+                monthSection.appendChild(monthHeader);
+                monthSection.appendChild(badgesContainer);
+                monthsContainer.appendChild(monthSection);
+            });
+
+            yearSection.appendChild(yearHeader);
+            yearSection.appendChild(monthsContainer);
+            list.appendChild(yearSection);
+        });
+    } else {
+        const year = yearKeys[0];
+        years[year].monthKeys.forEach(month => {
             const section = document.createElement('div');
             section.className = "space-y-2";
 
+            const monthName = monthNames[month] || month;
             const header = document.createElement('div');
             header.className = "flex items-center gap-1.5 cursor-pointer select-none text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors mt-1 py-1 w-fit";
             header.innerHTML = `
                 <i data-lucide="chevron-right" class="w-3.5 h-3.5 transition-transform duration-200"></i>
-                <span class="tracking-wider uppercase">${groupKey}</span>
+                <span class="tracking-wider uppercase">${monthName} ${year}</span>
             `;
 
             const badgesContainer = document.createElement('div');
             badgesContainer.className = "flex flex-wrap gap-2 hidden";
+            attachToggle(header, badgesContainer, '[data-lucide="chevron-right"]');
 
-            header.onclick = () => {
-                const isHidden = badgesContainer.classList.toggle('hidden');
-                const icon = header.querySelector('.lucide-chevron-right, [data-lucide="chevron-right"]');
-                if (icon) {
-                    if (isHidden) {
-                        icon.classList.remove('rotate-90');
-                    } else {
-                        icon.classList.add('rotate-90');
-                    }
-                }
-            };
-
-            groups[groupKey].forEach(d => {
-                const delen = d.split('-');
-                const nlDatum = `${delen[2]}-${delen[1]}`;
-
-                const badge = document.createElement('button');
-                badge.className = "px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded-full text-xs font-medium text-slate-700 transition-colors";
-                badge.innerText = nlDatum;
-                badge.onclick = () => onSelectCallback(d);
-                badgesContainer.appendChild(badge);
-            });
+            years[year].months[month].forEach(d => badgesContainer.appendChild(createBadge(d)));
 
             section.appendChild(header);
             section.appendChild(badgesContainer);
             list.appendChild(section);
         });
-
-        if (window.lucide) window.lucide.createIcons();
     }
+
+    if (window.lucide) window.lucide.createIcons();
 }
 
 export function updateReportView(text, placeholder, isLoading) {
